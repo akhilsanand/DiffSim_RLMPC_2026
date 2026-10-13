@@ -2856,7 +2856,7 @@ So only co-design has a \textbf{direct} term $\partial_{\mth}J^D$ (policy fixed,
 \end{frame}
 
 %-----------------------------------------------------------------------
-\begin{frame}{\normalsize Co-design results: inventory--routing network}
+\begin{frame}{\normalsize Co-design: inventory--routing network}
 \footnotesize
 \begin{overlayarea}{\textwidth}{0.86\textheight}
 \only<1-3>{
@@ -2932,28 +2932,39 @@ So only co-design has a \textbf{direct} term $\partial_{\mth}J^D$ (policy fixed,
 \begin{frame}{\normalsize Take-aways}
 \footnotesize
 \begin{enumerate}
-\item<1-> A policy trained in a model is an \textbf{implicit function} of the MDP: $\nst(\mth)$
-\item<2-> \textbf{Bellman tree}: $\pnu$ lives on the action edges, $\mth$ on the transition edges and the costs
-\begin{itemize}
-\scriptsize
-\item \LR: an edge passes $\partial\log P(\text{edge})\times$(value below it): no derivatives in $(\sv,\av)$, real data; variance grows with $|Q|$
-\item \PD: chain rule along each sampled path: differentiable simulators; low variance if the dynamics are smooth; $H$ steps $+$ critic
-\end{itemize}
-\item<3-> \textbf{IFT} on the stationarity of training: $\kap=-A^{-1}B$. Only the end point of training matters
-\item<4-> \textbf{Outer gradient} $=$ direct $+$ $\nabla_{\pnu}J^{\mathrm{out}}\,\kap$: sim-to-real tunes the \emph{model} (direct $=0$), co-design the \emph{system} (both terms)
-\item<5-> \textbf{In JAX}: \texttt{grad}, \texttt{jvp}, \texttt{vjp} $+$ one Krylov solve; never form $\kap$; \LR\ needs a DiCE-type surrogate
-\item<6-> \textbf{Applications}: simulators tuned for \emph{decisions} (sim-to-real, MBRL) and system design (co-design)
+\item<1-> \textbf{Models for decisions}: a policy optimal for an approximate model $\rth$ is in general not optimal in reality, and standard model fitting does not fix this
+\item<2-> \textbf{MDP equivalence}: some (non-unique) models and costs give the real optimal policy even if $\rth$ is inaccurate $\Rightarrow$ tune $\mth$ for \textbf{closed-loop performance}
+\item<3-> \textbf{The obstacle}: this needs $\kap=\mathrm d\nst/\mathrm d\mth$, the sensitivity of the trained policy
+\item<4-> \LR\ \textbf{re-weights} paths, \PD\ \textbf{moves} them; on the Bellman tree $\pnu$ and $\mth$ sit on different edges; neither always has lower variance
+\item<5-> \textbf{RL policy training can be differentiated}: under smoothness, convergence and regularity assumptions, the trained policy is a stationary point and the IFT gives a meaningful gradient, $\kap=-A^{-1}B$, from the end point of training alone
+\item<6-> \textbf{Outer gradient} $=$ direct $+\,\nabla_{\pnu}J^{\mathrm{out}}\kap$: tune a simulator for reality (sim-to-real) or a system with its policy (co-design)
 \end{enumerate}
 \visible<7->{
-\textbf{Open questions}: scaling the critic sensitivities, conditioning of $A$ for deep networks, offline real-world updates, partial observability
+\begin{alertblock}{}
+\textbf{Proof of concept established} on sim-to-real and co-design: a viable pathway towards \textbf{decision-oriented learning of MDPs}.
+\end{alertblock}}
+\visible<8->{
+\textbf{Open questions}: scaling the critic sensitivities, conditioning of $A$ for deep networks, offline real-world updates, latent-space model learning under partial observability}
+\end{frame}
 
-\vspace{.15cm}
-{\scriptsize
+%-----------------------------------------------------------------------
+\begin{frame}
+\begin{center}
+{\Large\textbf{Thank you!}}\\[8pt]
+{\large Questions and discussion}
+\end{center}
+\vspace{.8cm}
+{\footnotesize
 \textbf{Papers}
 \begin{itemize}
-\item Anand et al., \textit{Bi-level RL pathway for sim-to-real optimality}, RLC 2026
-\item Anand et al., \textit{Gradient-based co-design of RL policies with differentiable simulators}, TMLR 2026
-\end{itemize}}}
+\setlength{\itemsep}{6pt}
+\item \textit{Predicting What Matters: Training AI Models for Better Decisions}, IEEE TNNLS, 2025\\
+{\scriptsize Akhil S.~Anand, Shambhuraj Sawant, Dirk Peter Reinhardt, Sebastien Gros}
+\item \textit{Bi-level RL pathway for sim-to-real optimality}, RLC 2026\\
+{\scriptsize Akhil S.~Anand, Shambhuraj Sawant, Paavo Parmas, Jasper Hoffmann, Dirk Peter Reinhardt, Sebastien Gros}
+\item \textit{Gradient-based co-design of RL policies with differentiable simulators}, TMLR 2026\\
+{\scriptsize Akhil S.~Anand, Xun Shen, Marc Peter Deisenroth, Sebastien Gros}
+\end{itemize}}
 \end{frame}
 
 \end{document}
