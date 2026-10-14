@@ -2047,7 +2047,7 @@ Differentiating through policy optimization can be \textcolor{myRed2}{computatio
 \visible<8->{\LR:\quad\nabla_{\pnu}\Jh}&\visible<8->{=\E\Big[\sum\nolimits_k\gamma^k\,\textcolor{myOrangeD}{\nabla_{\pnu}\log\pin(\av_k|\sv_k)}\,Q^{\pin}_{\mth}(\sv_k,\av_k)\Big]}
 &&\quad\visible<8->{\text{\scriptsize REINFORCE, A2C, PPO}}\\
 \visible<9->{\PD:\quad\nabla_{\pnu}\Jh}&\visible<9->{=\E_\omega\Big[\sum\nolimits_k\gamma^k\big(\nabla_{\sv}\Lth\,\textcolor{myGreen3}{\tfrac{\mathrm d\sv_k}{\mathrm d\pnu}}+\nabla_{\av}\Lth\,\textcolor{myGreen3}{\tfrac{\mathrm d\av_k}{\mathrm d\pnu}}\big)\Big]}
-&&\quad\visible<9->{\text{\scriptsize BPTT, SVG, SAC (SVG(0))}}
+&&\quad\visible<9->{\text{\scriptsize BPTT, SVG, SVG}}
 \end{alignat*}
 \visible<10->{
 \begin{alertblock}{}
@@ -2058,125 +2058,127 @@ Differentiating through policy optimization can be \textcolor{myRed2}{computatio
 \end{frame}
 
 %-----------------------------------------------------------------------
-\begin{frame}{\normalsize LR or PD? Requirements, bias and variance}
-\footnotesize
-\begin{center}
-\renewcommand{\arraystretch}{1.45}
-\setlength{\tabcolsep}{6pt}
-\begin{tabular}{l|l|l}
- & \LR\ (re-weight) & \PD\ (move)\\ \hline
-needs & samples and $\nabla_{\pnu}\log\pin$ & derivatives of $f_{\mth}$, $g_{\pnu}$, $\Lth$\\
-\uncover<2->{simulator} & \uncover<2->{black box is fine} & \uncover<2->{must be differentiable}\\
-\uncover<3->{bias} & \uncover<3->{none} & \uncover<3->{at jumps (contacts, $\min$/$\max$)}\\
-\uncover<4->{variance grows with} & \uncover<4->{size of $Q$, horizon} & \uncover<4->{products of Jacobians $\nabla f_{\mth}$}\\
-\uncover<5->{reduce variance} & \uncover<5->{baseline, critic: $Q-V$} & \uncover<5->{short horizon $+$ critic (SVG, SHAC)}\\
-\end{tabular}
-\end{center}
-\vspace{-.1cm}
-\begin{columns}[c,onlytextwidth]
-\column{0.5\textwidth}
-\centering
-\begin{tikzpicture}[x=1.05cm, y=0.8cm, >=stealth', visible on=<6->]
-\fill[myGreen3!12, visible on=<7->] (0,0) rectangle (2.83,2.6);
-\fill[myOrangeD!12, visible on=<7->] (2.83,0) rectangle (4.3,2.6);
-\node[font=\scriptsize, visible on=<7->] at (1.4,2.3) {\PD\ wins};
-\node[font=\scriptsize, visible on=<7->] at (3.57,2.3) {\LR\ wins};
-\draw[->, black!60] (0,0) -- (4.4,0);
-\draw[->, black!60] (0,0) -- (0,2.75) node[above, font=\tiny, text=black!70]{gradient variance};
-\draw[myOrangeD, very thick] (0.05,1.25) -- (4.3,1.55);
-\draw[myGreen3, very thick, domain=0.05:3.2, samples=40] plot (\x,{0.2*exp(0.7*\x)});
-\node[font=\tiny, text=black!70, anchor=north west] at (0,0) {smooth, stable};
-\node[font=\tiny, text=black!70, anchor=north east] at (4.4,0) {chaotic, stiff, contacts};
-\end{tikzpicture}
-\column{0.47\textwidth}
-\visible<7->{
-\begin{alertblock}{}
-\textbf{Neither always has lower variance.}\\[3pt]
-\PD\ is far less noisy on smooth, stable systems, but can be far noisier than \LR\ on chaotic, stiff or contact-rich ones.\\[2pt]
-{\scriptsize (Parmas et al., 2018; Suh et al., 2022)}
-\end{alertblock}}
-\end{columns}
-\end{frame}
+% ===== A3: LR vs PD table, cut from the main flow (its message is now on the PD variance slide) =====
+% \begin{frame}{\normalsize LR or PD? Requirements, bias and variance}
+% \footnotesize
+% \begin{center}
+% \renewcommand{\arraystretch}{1.45}
+% \setlength{\tabcolsep}{6pt}
+% \begin{tabular}{l|l|l}
+%  & \LR\ (re-weight) & \PD\ (move)\\ \hline
+% needs & samples and $\nabla_{\pnu}\log\pin$ & derivatives of $f_{\mth}$, $g_{\pnu}$, $\Lth$\\
+% \uncover<2->{simulator} & \uncover<2->{black box is fine} & \uncover<2->{must be differentiable}\\
+% \uncover<3->{bias} & \uncover<3->{none} & \uncover<3->{at jumps (contacts, $\min$/$\max$)}\\
+% \uncover<4->{variance grows with} & \uncover<4->{size of $Q$, horizon} & \uncover<4->{products of Jacobians $\nabla f_{\mth}$}\\
+% \uncover<5->{reduce variance} & \uncover<5->{baseline, critic: $Q-V$} & \uncover<5->{short horizon $+$ critic (SVG, SHAC)}\\
+% \end{tabular}
+% \end{center}
+% \vspace{-.1cm}
+% \begin{columns}[c,onlytextwidth]
+% \column{0.5\textwidth}
+% \centering
+% \begin{tikzpicture}[x=1.05cm, y=0.8cm, >=stealth', visible on=<6->]
+% \fill[myGreen3!12, visible on=<7->] (0,0) rectangle (2.83,2.6);
+% \fill[myOrangeD!12, visible on=<7->] (2.83,0) rectangle (4.3,2.6);
+% \node[font=\scriptsize, visible on=<7->] at (1.4,2.3) {\PD\ wins};
+% \node[font=\scriptsize, visible on=<7->] at (3.57,2.3) {\LR\ wins};
+% \draw[->, black!60] (0,0) -- (4.4,0);
+% \draw[->, black!60] (0,0) -- (0,2.75) node[above, font=\tiny, text=black!70]{gradient variance};
+% \draw[myOrangeD, very thick] (0.05,1.25) -- (4.3,1.55);
+% \draw[myGreen3, very thick, domain=0.05:3.2, samples=40] plot (\x,{0.2*exp(0.7*\x)});
+% \node[font=\tiny, text=black!70, anchor=north west] at (0,0) {smooth, stable};
+% \node[font=\tiny, text=black!70, anchor=north east] at (4.4,0) {chaotic, stiff, contacts};
+% \end{tikzpicture}
+% \column{0.47\textwidth}
+% \visible<7->{
+% \begin{alertblock}{}
+% \textbf{Neither always has lower variance.}\\[3pt]
+% \PD\ is far less noisy on smooth, stable systems, but can be far noisier than \LR\ on chaotic, stiff or contact-rich ones.\\[2pt]
+% {\scriptsize (Parmas et al., 2018; Suh et al., 2022)}
+% \end{alertblock}}
+% \end{columns}
+% \end{frame}
 
 %-----------------------------------------------------------------------
-\begin{frame}{\normalsize The Bellman computational tree}
-\footnotesize
-\begin{columns}[T]
-\column{0.58\textwidth}
-\begin{tikzpicture}[scale=0.83, >=stealth',
-  st/.style={circle, draw, fill=white, inner sep=0pt, minimum size=0.36cm, font=\tiny},
-  ac/.style={rectangle, draw, fill=black!30, inner sep=0pt, minimum size=0.15cm},
-  pe/.style={draw=black!40, onslide=<2->{draw=myBlue3, thick}},
-  me/.style={draw=black!40, onslide=<3->{draw=myRed2, thick}}]
-% column headers
-\foreach \x/\t in {0/{$\sv_0$}, 1.4/{$\av_0\sim\pin$}, 2.9/{$\sv_1\sim\rth$}, 4.3/{$\av_1\sim\pin$}, 5.3/{$\cdots$}}
-  \node[font=\scriptsize] at (\x,3.85) {\t};
-\draw[->, black!50] (-0.2,-3.75) -- (5.6,-3.75) node[right, font=\tiny]{time};
-% tree
-\node[st] (r) at (0,0) {$\sv_0$};
-\foreach \i/\y in {1/1.9,2/-1.9}{
-  \node[ac] (a\i) at (1.4,\y) {};
-  \draw[pe] (r) -- (a\i);
-  \foreach \j/\dy in {1/0.95,2/-0.95}{
-    \node[st] (s\i\j) at (2.9,{\y+\dy}) {$\sv_1$};
-    \draw[me] (a\i) -- (s\i\j);
-    \foreach \k/\ddy in {1/0.43,2/-0.43}{
-      \node[ac] (a\i\j\k) at (4.3,{\y+\dy+\ddy}) {};
-      \draw[pe] (s\i\j) -- (a\i\j\k);
-      \draw[me, densely dotted] (a\i\j\k) -- ++(0.55,0.14);
-      \draw[me, densely dotted] (a\i\j\k) -- ++(0.55,-0.14);
-    }
-  }
-}
-% edge labels
-\node[visible on=<2->, font=\tiny, text=myBlue3, anchor=south east, inner sep=1pt] at ($(r)!0.55!(a1)$) {$\pin(\av_0|\sv_0)$};
-\node[visible on=<3->, font=\tiny, text=myRed2, anchor=north west, inner sep=1pt] at ($(a2)!0.5!(s21)+(0.05,-0.02)$) {$\rth(\sv_1|\sv_0,\av_0)$};
-% costs at action nodes
-\node[visible on=<3->, font=\tiny, text=myRed2, anchor=south east, inner sep=1pt] at (a1.north west) {$\Lth(\sv_0,\av_0)$};
-\node[visible on=<3->, font=\tiny, text=myRed2, anchor=north east, inner sep=1pt] at (a2.south west) {$\Lth(\sv_0,\av_0)$};
-% subtrees (values)
-\coordinate (t1) at ($(a111)+(0.6,0.2)$);
-\coordinate (t2) at ($(a122)+(0.6,-0.2)$);
-\node[visible on=<4->, draw=myGreen3, very thick, rounded corners, fit=(a1)(a111)(a122)(t1)(t2), inner sep=2pt] (subQ) {};
-\node[visible on=<4->, text=myGreen3, font=\scriptsize, anchor=west] at (subQ.east) {$Q^{\pin}_{\mth}(\sv_0,\av_0)$};
-\coordinate (t3) at ($(a221)+(0.6,0.2)$);
-\coordinate (t4) at ($(a222)+(0.6,-0.2)$);
-\node[visible on=<4->, draw=myGreen3, very thick, dashed, rounded corners, fit=(s22)(a221)(a222)(t3)(t4), inner sep=2pt] (subV) {};
-\node[visible on=<4->, text=myGreen3, font=\scriptsize, anchor=west] at (subV.east) {$V^{\pin}_{\mth}(\sv_1)$};
-\end{tikzpicture}
-\column{0.4\textwidth}
-\textbf{All possible histories}: every root-to-leaf path is one trajectory; its probability is the product of its edge probabilities
-\begin{align*}
-\Jh(\pnu) = \sum_{\text{paths}}P(\text{path})\sum_k\gamma^k\Lth
-\end{align*}
-
-\vspace{-.3cm}
-\visible<2->{\begin{itemize}
-\item \textcolor{myBlue3}{\textbf{Policy edges}} $\pin(\av|\sv)$: \\$\pnu$ lives here
-\item \visible<3->{\textcolor{myRed2}{\textbf{Model edges}} $\rth(\sv'|\sv,\av)$ and \textcolor{myRed2}{\textbf{costs}} $\Lth(\sv,\av)$ at the action nodes: $\mth$ lives here}
-\end{itemize}}
-\visible<4->{
-\textcolor{myGreen3}{\textbf{Value of a subtree}} (Bellman)
-\begin{align*}
-Q(\sv,\av)&=\Lth(\sv,\av)+\gamma\,\E_{\sv'\sim\rth}\big[V(\sv')\big]\\
-V(\sv)&=\E_{\av\sim\pin}\big[Q(\sv,\av)\big]
-\end{align*}}
-\end{columns}
-\vspace{-.55cm}
-\visible<5->{
-\begin{alertblock}{}
-\scriptsize In the \LR\ policy gradient $\E\big[\sum_k\gamma^k\nabla_{\pnu}\log\pin\,Q\big]$, $\mth$ acts in two places: the \textcolor{myRed2}{\textbf{edges above}} a node (which histories are sampled) and the \textcolor{myGreen3}{\textbf{subtree below}} it ($Q$). \textbf{Differentiating training with respect to $\mth$ means tracking both.}
-\end{alertblock}}
-\end{frame}
-
+% (Bellman computational tree slide: commented out, kept for reference)
+%\begin{frame}{\normalsize The Bellman computational tree}
+%\footnotesize
+%\begin{columns}[T]
+%\column{0.58\textwidth}
+%\begin{tikzpicture}[scale=0.83, >=stealth',
+%  st/.style={circle, draw, fill=white, inner sep=0pt, minimum size=0.36cm, font=\tiny},
+%  ac/.style={rectangle, draw, fill=black!30, inner sep=0pt, minimum size=0.15cm},
+%  pe/.style={draw=black!40, onslide=<2->{draw=myBlue3, thick}},
+%  me/.style={draw=black!40, onslide=<3->{draw=myRed2, thick}}]
+%% column headers
+%\foreach \x/\t in {0/{$\sv_0$}, 1.4/{$\av_0\sim\pin$}, 2.9/{$\sv_1\sim\rth$}, 4.3/{$\av_1\sim\pin$}, 5.3/{$\cdots$}}
+%  \node[font=\scriptsize] at (\x,3.85) {\t};
+%\draw[->, black!50] (-0.2,-3.75) -- (5.6,-3.75) node[right, font=\tiny]{time};
+%% tree
+%\node[st] (r) at (0,0) {$\sv_0$};
+%\foreach \i/\y in {1/1.9,2/-1.9}{
+%  \node[ac] (a\i) at (1.4,\y) {};
+%  \draw[pe] (r) -- (a\i);
+%  \foreach \j/\dy in {1/0.95,2/-0.95}{
+%    \node[st] (s\i\j) at (2.9,{\y+\dy}) {$\sv_1$};
+%    \draw[me] (a\i) -- (s\i\j);
+%    \foreach \k/\ddy in {1/0.43,2/-0.43}{
+%      \node[ac] (a\i\j\k) at (4.3,{\y+\dy+\ddy}) {};
+%      \draw[pe] (s\i\j) -- (a\i\j\k);
+%      \draw[me, densely dotted] (a\i\j\k) -- ++(0.55,0.14);
+%      \draw[me, densely dotted] (a\i\j\k) -- ++(0.55,-0.14);
+%    }
+%  }
+%}
+%% edge labels
+%\node[visible on=<2->, font=\tiny, text=myBlue3, anchor=south east, inner sep=1pt] at ($(r)!0.55!(a1)$) {$\pin(\av_0|\sv_0)$};
+%\node[visible on=<3->, font=\tiny, text=myRed2, anchor=north west, inner sep=1pt] at ($(a2)!0.5!(s21)+(0.05,-0.02)$) {$\rth(\sv_1|\sv_0,\av_0)$};
+%% costs at action nodes
+%\node[visible on=<3->, font=\tiny, text=myRed2, anchor=south east, inner sep=1pt] at (a1.north west) {$\Lth(\sv_0,\av_0)$};
+%\node[visible on=<3->, font=\tiny, text=myRed2, anchor=north east, inner sep=1pt] at (a2.south west) {$\Lth(\sv_0,\av_0)$};
+%% subtrees (values)
+%\coordinate (t1) at ($(a111)+(0.6,0.2)$);
+%\coordinate (t2) at ($(a122)+(0.6,-0.2)$);
+%\node[visible on=<4->, draw=myGreen3, very thick, rounded corners, fit=(a1)(a111)(a122)(t1)(t2), inner sep=2pt] (subQ) {};
+%\node[visible on=<4->, text=myGreen3, font=\scriptsize, anchor=west] at (subQ.east) {$Q^{\pin}_{\mth}(\sv_0,\av_0)$};
+%\coordinate (t3) at ($(a221)+(0.6,0.2)$);
+%\coordinate (t4) at ($(a222)+(0.6,-0.2)$);
+%\node[visible on=<4->, draw=myGreen3, very thick, dashed, rounded corners, fit=(s22)(a221)(a222)(t3)(t4), inner sep=2pt] (subV) {};
+%\node[visible on=<4->, text=myGreen3, font=\scriptsize, anchor=west] at (subV.east) {$V^{\pin}_{\mth}(\sv_1)$};
+%\end{tikzpicture}
+%\column{0.4\textwidth}
+%\textbf{All possible histories}: every root-to-leaf path is one trajectory; its probability is the product of its edge probabilities
+%\begin{align*}
+%\Jh(\pnu) = \sum_{\text{paths}}P(\text{path})\sum_k\gamma^k\Lth
+%\end{align*}
+%
+%\vspace{-.3cm}
+%\visible<2->{\begin{itemize}
+%\item \textcolor{myBlue3}{\textbf{Policy edges}} $\pin(\av|\sv)$: \\$\pnu$ lives here
+%\item \visible<3->{\textcolor{myRed2}{\textbf{Model edges}} $\rth(\sv'|\sv,\av)$ and \textcolor{myRed2}{\textbf{costs}} $\Lth(\sv,\av)$ at the action nodes: $\mth$ lives here}
+%\end{itemize}}
+%\visible<4->{
+%\textcolor{myGreen3}{\textbf{Value of a subtree}} (Bellman)
+%\begin{align*}
+%Q(\sv,\av)&=\Lth(\sv,\av)+\gamma\,\E_{\sv'\sim\rth}\big[V(\sv')\big]\\
+%V(\sv)&=\E_{\av\sim\pin}\big[Q(\sv,\av)\big]
+%\end{align*}}
+%\end{columns}
+%\vspace{-.55cm}
+%\visible<5->{
+%\begin{alertblock}{}
+%\scriptsize In the \LR\ policy gradient $\E\big[\sum_k\gamma^k\nabla_{\pnu}\log\pin\,Q\big]$, $\mth$ acts in two places: the \textcolor{myRed2}{\textbf{edges above}} a node (which histories are sampled) and the \textcolor{myGreen3}{\textbf{subtree below}} it ($Q$). \textbf{Differentiating training with respect to $\mth$ means tracking both.}
+%\end{alertblock}}
+%\end{frame}
+%
 %-----------------------------------------------------------------------
-\begin{frame}{\normalsize Stochastic trajectories: sampling the tree}
+\begin{frame}{\normalsize Stochastic trajectories: sampling the simulator}
 \footnotesize
 \begin{columns}[T]
 \column{0.4\textwidth}
 \includegraphics[width=\textwidth]{RLRL/ProbabilisticModel.pdf}\\[2pt]
-{\scriptsize The tree has $(|\mathcal A||\mathcal S|)^N$ paths: we never enumerate it, we \textbf{sample} it.\\[2pt]
-$n$ simulated closed-loop trajectories from $\sv_0$ to $\sv_N$ = $n$ sampled root-to-leaf paths of the tree}
+{\scriptsize There are $(|\mathcal A||\mathcal S|)^N$ possible histories: we never enumerate them, we \textbf{sample} them.\\[2pt]
+$n$ simulated closed-loop trajectories from $\sv_0$ to $\sv_N$:}
 \begin{align*}
 \Jh(\pnu)\approx\frac1n\sum_{i=1}^n\sum_{k=0}^N\gamma^k\Lth(\sv_k^i,\av_k^i)
 \end{align*}
@@ -2220,77 +2222,152 @@ $n$ simulated closed-loop trajectories from $\sv_0$ to $\sv_N$ = $n$ sampled roo
 \end{frame}
 
 %-----------------------------------------------------------------------
-\begin{frame}{\normalsize Differentiating the tree, LR style: edges pass their score down}
+\begin{frame}{\normalsize LR gradients: sample, score, average}
 \footnotesize
 \begin{columns}[T]
-\column{0.36\textwidth}
-\begin{tikzpicture}[scale=0.72, >=stealth',
-  st/.style={circle, draw, fill=white, inner sep=0pt, minimum size=0.3cm, font=\tiny},
-  ac/.style={rectangle, draw, fill=black!30, inner sep=0pt, minimum size=0.14cm},
-  pe/.style={draw=myBlue3!45},
-  me/.style={draw=myRed2!45}]
-\node[st] (r) at (0,0) {$\sv_0$};
-\foreach \i/\y in {1/1.25,2/-1.25}{
-  \node[ac] (a\i) at (1.1,\y) {};
-  \draw[pe] (r) -- (a\i);
-  \foreach \j/\dy in {1/0.62,2/-0.62}{
-    \node[st] (s\i\j) at (2.2,{\y+\dy}) {};
-    \draw[me] (a\i) -- (s\i\j);
-    \foreach \k/\ddy in {1/0.27,2/-0.27}{
-      \node[ac] (a\i\j\k) at (3.2,{\y+\dy+\ddy}) {};
-      \draw[pe] (s\i\j) -- (a\i\j\k);
-      \draw[me, densely dotted] (a\i\j\k) -- ++(0.45,0.1);
-      \draw[me, densely dotted] (a\i\j\k) -- ++(0.45,-0.1);
-    }
-  }
+\column{0.47\textwidth}
+\begin{tikzpicture}[x=0.78cm, y=0.56cm, >=stealth',
+  st/.style={circle, draw, fill=white, inner sep=0pt, minimum size=0.36cm, font=\tiny},
+  ac/.style={rectangle, draw, fill=black!25, inner sep=0pt, minimum size=0.15cm}]
+\foreach \r/\y/\lab in {1/0/1, 2/-1.75/2, 3/-3.9/n}{
+  \node[font=\tiny, text=black!60, anchor=east] at (-0.3,\y) {$i\!=\!\lab$};
+  \node[st] (s0\r) at (0,\y) {$\sv_0$};
+  \node[ac] (a0\r) at (1,\y) {};
+  \node[st] (s1\r) at (2,\y) {$\sv_1$};
+  \node[ac] (a1\r) at (3,\y) {};
+  \node[st] (s2\r) at (4,\y) {$\sv_2$};
+  \node (d\r) at (4.75,\y) {$\cdots$};
+  \draw[->, alt=<2->{myBlue3, thick}{black!50}] (s0\r) -- (a0\r);
+  \draw[->, alt=<2->{myRed2, thick}{black!50}] (a0\r) -- (s1\r);
+  \draw[->, alt=<2->{myBlue3, thick}{black!50}] (s1\r) -- (a1\r);
+  \draw[->, alt=<2->{myRed2, thick}{black!50}] (a1\r) -- (s2\r);
+  \draw[->, black!50] (s2\r) -- (d\r);
 }
-% overlay 2: P(e) on a policy edge and on a model edge; overlay 3: perturb the policy edge
-\draw[visible on=<3->, myBlue3, line width=1.6pt] (r) -- (a1);
-\node[font=\tiny, visible on=<2->, alt=<3->{text=myOrangeD}{text=myBlue3}, inner sep=1pt, anchor=south east] at ($(r)!0.5!(a1)$) {\alt<3->{$\partial\log\pin$}{$P(e)=\pin$}};
-\coordinate (u1) at ($(a111)+(0.5,0.15)$);
-\coordinate (u2) at ($(a122)+(0.5,-0.15)$);
-\node[visible on=<3->, draw=myGreen3, thick, rounded corners, fit=(a1)(a111)(a122)(u1)(u2), inner sep=1.5pt] (sq) {};
-\node[visible on=<3->, font=\tiny, text=myGreen3, anchor=south] at (sq.north) {$Q(\sv_0,\av_0)$};
-% overlay 4: perturb the model edge
-\draw[visible on=<4->, myRed2, line width=1.6pt] (a2) -- (s22);
-\node[font=\tiny, visible on=<2->, alt=<4->{text=myOrangeD}{text=myRed2}, inner sep=1pt, anchor=north east] at ($(a2)!0.5!(s22)$) {\alt<4->{$\partial\log\rth$}{$P(e)=\rth$}};
-\coordinate (v1) at ($(a221)+(0.5,0.12)$);
-\coordinate (v2) at ($(a222)+(0.5,-0.15)$);
-\node[visible on=<4->, draw=myGreen3, thick, dashed, rounded corners, fit=(s22)(a221)(a222)(v1)(v2), inner sep=1.5pt] (sv) {};
-\node[visible on=<4->, font=\tiny, text=myGreen3, anchor=north] at (sv.south) {$V(\sv_1)$};
+\node at (2,-2.75) {$\vdots$};
+% overlay 2: every sampled step has a log-probability
+\foreach \u/\v/\c/\t in {s01/a01/myBlue3/\log\pi, a01/s11/myRed2/\log\rho, s11/a11/myBlue3/\log\pi, a11/s21/myRed2/\log\rho}
+  \node[visible on=<2->, font=\tiny, text=\c, anchor=south, inner sep=1pt] at ($(\u)!0.5!(\v)+(0,0.15)$) {$\t$};
+% overlay 3: weighted by the cost that follows
+\foreach \n/\t in {a01/Q_0, s11/V_1, a11/Q_1, s21/V_2}
+  \node[visible on=<3->, font=\tiny, text=myGreen3, anchor=north, inner sep=1pt] at ($(\n.south)+(0,-0.02)$) {$\t$};
+% overlay 4: one number per episode, then the average
+\foreach \r/\lab in {1/1,2/2,3/n}
+  \node[visible on=<4->, font=\tiny, anchor=west, inner sep=1pt] at ($(d\r.east)+(-0.05,0)$) {$\to g_{\lab}$};
+\draw[visible on=<4->, decorate, decoration={brace, amplitude=3pt}, thick, myOrangeD] (5.95,0.35) -- (5.95,-4.25);
+\node[visible on=<4->, font=\tiny, text=myOrangeD, anchor=north east] at (6.1,-4.35) {gradient $\approx\frac1n\sum_i g_i$};
 \end{tikzpicture}
-\column{0.62\textwidth}
-\textbf{One rule}: $\partial P(\tau)=P(\tau)\,\partial\log P(\tau)$, \ $\log P(\tau)=\sum_{e\in\tau}\log P(e)$ \ $\Rightarrow$ \ each edge $e$ contributes\\[3pt]
-{\centering\textcolor{myOrangeD}{$\partial\log P(e)$} $\ \times\ $ \textcolor{myGreen3}{(discounted cost of the subtree below $e$)}\par}
-\vspace{2pt}
-\visible<2->{{\scriptsize \textcolor{myOrangeD}{$\partial\log P(e)$}: relative change of $P(e)=\textcolor{myBlue3}{\pin}$ or $\textcolor{myRed2}{\rth}$}}\\[3pt]
-\visible<3->{
-\textcolor{myBlue3}{\textbf{Policy edges}}, $\partial=\nabla_{\pnu}$: below $(\sv_k,\av_k)$ hangs $Q$ \ ({\it recall}: the \LR\ policy gradient)
-\begin{align*}
-\nabla_{\pnu}\Jh = \E\Big[\sum_k\gamma^k\,\textcolor{myOrangeD}{\nabla_{\pnu}\log\pin(\av_k|\sv_k)}\,\textcolor{myGreen3}{Q^{\pin}_{\mth}(\sv_k,\av_k)}\Big]
-\end{align*}}
+\column{0.51\textwidth}
+\textbf{1. Simulate} $n$ episodes with $\pin$, keep the sampled $(\sv_k,\av_k)$; no gradient flows through the simulator\\[4pt]
+\visible<2->{\textbf{2. Score}: the log-probability of every sampled step, \textcolor{myBlue3}{$\log\pin(\av_k|\sv_k)$} (holds $\pnu$) and \textcolor{myRed2}{$\log\rth(\sv_{k+1}|\sv_k,\av_k)$} (holds $\mth$)}\\[4pt]
+\visible<3->{\textbf{3. Weight} each log-probability by the cost that \textbf{follows} it: \textcolor{myGreen3}{$Q_k$} or \textcolor{myGreen3}{$V_{k+1}$} (a critic or the sampled return)}
 \end{columns}
-\visible<4->{
-\textcolor{myRed2}{\textbf{Model edges and costs}}, $\partial=\nabla_{\mth}$: below $\sv_{k+1}$ hangs $V$ \ (\textbf{new})
-\begin{align*}
-\nabla_{\mth}\Jh = \E\Big[\sum_k\gamma^k\Big(\nabla_{\mth}\Lth(\sv_k,\av_k)+\gamma\,\textcolor{myOrangeD}{\nabla_{\mth}\log\rth(\sv_{k+1}|\sv_k,\av_k)}\,\textcolor{myGreen3}{V^{\pin}_{\mth}(\sv_{k+1})}\Big)\Big]
-\end{align*}}
-
+\vspace{.1cm}
+\visible<4->{\textbf{4. Average} over the episodes:}
 \vspace{-.25cm}
-\visible<5->{
-\textbf{Two tools we reuse later}, to differentiate the policy gradient itself:
+\begin{align*}
+\visible<4->{\nabla_{\pnu}\Jh}&\visible<4->{\approx\tfrac1n\textstyle\sum_{\text{episodes}}\sum_k\gamma^k\,\textcolor{myBlue3}{\nabla_{\pnu}\log\pin(\av_k|\sv_k)}\,\textcolor{myGreen3}{Q_k}}\\[3pt]
+\visible<5->{\nabla_{\mth}\Jh}&\visible<5->{\approx\tfrac1n\textstyle\sum_{\text{episodes}}\sum_k\gamma^k\big(\nabla_{\mth}\Lth(\sv_k,\av_k)+\gamma\,\textcolor{myRed2}{\nabla_{\mth}\log\rth(\sv_{k+1}|\sv_k,\av_k)}\,\textcolor{myGreen3}{V_{k+1}}\big)}
+\end{align*}
 \vspace{-.1cm}
-{\setlength{\leftmargini}{1.2em}
-\begin{itemize}
-\item \textbf{Critic sensitivity}: $Q(\sv,\av)$ is a subtree too, so the same rule gives $\nabla_{\mth}Q$, $\nabla_{\pnu}Q$
-\item<6-> \textbf{Markov-chain sensitivity}: $\partial\,\E[\eta(\sv_k,\av_k)]=\E[\eta\,W_k]$, \ $W_k=\sum_{e\text{ above }k}\partial\log P(e)$
-\item<7->[] {\scriptsize $\checkmark$ no derivatives of $\Lth$ in $(\sv,\av)$: costs may be non-smooth, states and actions discrete\\
-\ding{56} $\nabla_{\mth}$ needs a simulator \emph{density} $\rth$ \qquad \ding{56} variance $\propto|V|$}
-\end{itemize}}}
+\visible<6->{{\scriptsize \textbf{In code} (A2C, PPO): one backward pass on these sums without $\nabla$, with $Q_k$, $V_{k+1}$ \texttt{detach}ed}}\\[3pt]
+\visible<7->{{\scriptsize $\checkmark$ no derivatives in $(\sv,\av)$: black-box simulator for $\nabla_{\pnu}$, non-smooth costs, discrete $\sv,\av$\\
+\ding{56} $\nabla_{\mth}$ needs the log-density $\log\rth$ of every simulated step \quad \ding{56} variance grows with $k$, $Q$, $V$}}
 \end{frame}
 
+% ===== A2: original LR concept slide (merged above) =====
+% \begin{frame}{\normalsize LR gradients: sample, score, average}
+% \footnotesize
+% \begin{columns}[T]
+% \column{0.47\textwidth}
+% \begin{tikzpicture}[x=0.78cm, y=0.56cm, >=stealth',
+%   st/.style={circle, draw, fill=white, inner sep=0pt, minimum size=0.36cm, font=\tiny},
+%   ac/.style={rectangle, draw, fill=black!25, inner sep=0pt, minimum size=0.15cm}]
+% \foreach \r/\y/\lab in {1/0/1, 2/-1.75/2, 3/-3.9/n}{
+%   \node[font=\tiny, text=black!60, anchor=east] at (-0.3,\y) {$i\!=\!\lab$};
+%   \node[st] (s0\r) at (0,\y) {$\sv_0$};
+%   \node[ac] (a0\r) at (1,\y) {};
+%   \node[st] (s1\r) at (2,\y) {$\sv_1$};
+%   \node[ac] (a1\r) at (3,\y) {};
+%   \node[st] (s2\r) at (4,\y) {$\sv_2$};
+%   \node (d\r) at (4.75,\y) {$\cdots$};
+%   \draw[->, alt=<2->{myBlue3, thick}{black!50}] (s0\r) -- (a0\r);
+%   \draw[->, alt=<2->{myRed2, thick}{black!50}] (a0\r) -- (s1\r);
+%   \draw[->, alt=<2->{myBlue3, thick}{black!50}] (s1\r) -- (a1\r);
+%   \draw[->, alt=<2->{myRed2, thick}{black!50}] (a1\r) -- (s2\r);
+%   \draw[->, black!50] (s2\r) -- (d\r);
+% }
+% \node at (2,-2.75) {$\vdots$};
+% % overlay 2: every sampled step has a log-probability
+% \foreach \u/\v/\c/\t in {s01/a01/myBlue3/\log\pi, a01/s11/myRed2/\log\rho, s11/a11/myBlue3/\log\pi, a11/s21/myRed2/\log\rho}
+%   \node[visible on=<2->, font=\tiny, text=\c, anchor=south, inner sep=1pt] at ($(\u)!0.5!(\v)+(0,0.15)$) {$\t$};
+% % overlay 3: weighted by the cost that follows
+% \foreach \n/\t in {a01/Q_0, s11/V_1, a11/Q_1, s21/V_2}
+%   \node[visible on=<3->, font=\tiny, text=myGreen3, anchor=north, inner sep=1pt] at ($(\n.south)+(0,-0.02)$) {$\t$};
+% % overlay 4: one number per episode, then the average
+% \foreach \r/\lab in {1/1,2/2,3/n}
+%   \node[visible on=<4->, font=\tiny, anchor=west, inner sep=1pt] at ($(d\r.east)+(-0.05,0)$) {$\to g_{\lab}$};
+% \draw[visible on=<4->, decorate, decoration={brace, amplitude=3pt}, thick, myOrangeD] (5.95,0.35) -- (5.95,-4.25);
+% \node[visible on=<4->, font=\tiny, text=myOrangeD, anchor=north east] at (6.1,-4.35) {gradient $\approx\frac1n\sum_i g_i$};
+% \end{tikzpicture}
+% \column{0.51\textwidth}
+% \textbf{1. Simulate} $n$ episodes with $\pin$, keep the sampled $(\sv_k,\av_k)$; no gradient flows through the simulator\\[4pt]
+% \visible<2->{\textbf{2. Score}: the log-probability of every sampled step
+% \vspace{-.2cm}
+% \begin{align*}
+% \log p(\tau)=&\textstyle\sum_k\textcolor{myBlue3}{\log\pin(\av_k|\sv_k)}\\[-2pt]
+% &\textstyle+\sum_k\textcolor{myRed2}{\log\rth(\sv_{k+1}|\sv_k,\av_k)}
+% \end{align*}
+% \vspace{-.6cm}
+%
+% {\scriptsize $\pnu$ appears only in the \textcolor{myBlue3}{policy steps}, $\mth$ only in the \textcolor{myRed2}{simulator steps}}}\\[4pt]
+% \visible<3->{\textbf{3. Weight} each log-probability by the cost that \textbf{follows} it: \textcolor{myGreen3}{$Q_k$} or \textcolor{myGreen3}{$V_{k+1}$} (a critic or the sampled return)}
+% \end{columns}
+% \vspace{.05cm}
+% \visible<4->{\textbf{4. Average} over the episodes:}
+% \vspace{-.15cm}
+% \begin{align*}
+% \visible<4->{\nabla_{\pnu}\Jh}&\visible<4->{\approx\tfrac1n\textstyle\sum_{i=1}^n\sum_k\gamma^k\,\textcolor{myBlue3}{\nabla_{\pnu}\log\pin(\av^i_k|\sv^i_k)}\,\textcolor{myGreen3}{Q^i_k}}\\
+% \visible<5->{\nabla_{\mth}\Jh}&\visible<5->{\approx\tfrac1n\textstyle\sum_{i=1}^n\sum_k\gamma^k\Big(\nabla_{\mth}\Lth(\sv^i_k,\av^i_k)+\gamma\,\textcolor{myRed2}{\nabla_{\mth}\log\rth(\sv^i_{k+1}|\sv^i_k,\av^i_k)}\,\textcolor{myGreen3}{V^i_{k+1}}\Big)}
+% \end{align*}
+% \vspace{-.15cm}
+% \visible<6->{{\scriptsize $\checkmark$ no derivatives in $(\sv,\av)$: black-box simulator for $\nabla_{\pnu}$, non-smooth costs, discrete $\sv,\av$\\
+% \ding{56} $\nabla_{\mth}$ needs the log-density $\log\rth$ of every simulated step \quad \ding{56} variance grows with $k$, $Q$, $V$}}
+% \end{frame}
+
 %-----------------------------------------------------------------------
-\begin{frame}{\normalsize Differentiating PD style: no tree needed, follow each sampled path}
+% ===== A2: original LR code slide (merged into the LR slide) =====
+% \begin{frame}{\normalsize LR gradients in code: a surrogate loss and one backward pass}
+% \footnotesize
+% \begin{center}
+% \begin{tikzpicture}[>=stealth', node distance=0.42cm,
+%   bx/.style={draw, rounded corners=2pt, align=center, font=\scriptsize, minimum height=1.25cm, inner sep=3pt},
+%   ar/.style={->, thick, black!60}]
+% \node[bx, fill=black!6, text width=1.8cm] (sim) {\textbf{simulate}\\ $n$ episodes with $\pin$ in $\rth$\\ {\tiny no gradients}};
+% \node[bx, fill=black!6, text width=2.6cm, right=of sim, visible on=<2->] (rec) {\textbf{record per step}\\ \textcolor{myBlue3}{$\log\pin(\av_k|\sv_k)$}, \textcolor{myRed2}{$\log\rth(\sv_{k+1}|\sv_k,\av_k)$}, $\Lth(\sv_k,\av_k)$; critic: \textcolor{myGreen3}{$Q_k$, $V_{k+1}$}};
+% \node[bx, fill=myLightRed, text width=1.55cm, right=of rec, visible on=<3->] (loss) {\textbf{surrogate loss}\\ $\mathcal L(\pnu,\mth)$\\ {\tiny below}};
+% \node[bx, fill=myLightBlue, text width=1.95cm, right=of loss, visible on=<4->] (bwd) {\textbf{backward pass}\\ $\mathtt{grad}(\mathcal L)$\\ $=\big(\nabla_{\pnu}\Jh,\ \nabla_{\mth}\Jh\big)$};
+% \draw[ar, visible on=<2->] (sim) -- (rec);
+% \draw[ar, visible on=<3->] (rec) -- (loss);
+% \draw[ar, visible on=<4->] (loss) -- (bwd);
+% \end{tikzpicture}
+% \end{center}
+% \vspace{-.2cm}
+% \visible<3->{\textbf{The surrogate loss}: a function whose gradient is the LR estimate of the previous slide
+% \vspace{-.15cm}
+% \begin{align*}
+% \mathcal L(\pnu,\mth)=\frac1n\sum_{\text{episodes}}\sum_k\gamma^k\Big(&\underbrace{\textcolor{myBlue3}{\log\pin(\av_k|\sv_k)}\,\mathrm{stop}(\textcolor{myGreen3}{Q_k})}_{\nabla_{\pnu}:\ \text{score}\times Q}+\underbrace{\Lth(\sv_k,\av_k)}_{\nabla_{\mth}:\ \text{cost}}\\[-2pt]
+% &+\underbrace{\gamma\,\textcolor{myRed2}{\log\rth(\sv_{k+1}|\sv_k,\av_k)}\,\mathrm{stop}(\textcolor{myGreen3}{V_{k+1}})}_{\nabla_{\mth}:\ \text{score}\times V}\Big)
+% \end{align*}}
+% \vspace{-.35cm}
+% \begin{itemize}
+% \item<4-> $\mathrm{stop}(\cdot)$ = treat as a constant (\texttt{detach} in PyTorch, \texttt{stop\_gradient} in JAX); the sampled $\sv_k,\av_k$ are constants too
+% \item<5-> so AD differentiates only the log-probabilities and the cost $\Rightarrow$ exactly the averages of the previous slide
+% \item<6-> the value of $\mathcal L$ means nothing, only its gradient does; this is how A2C and PPO are coded (PPO: $Q\to$ advantage, plus clipping)
+% \end{itemize}
+% \end{frame}
+
+%-----------------------------------------------------------------------
+\begin{frame}{\normalsize PD gradients: backpropagate through the simulator}
 \footnotesize
 \begin{center}
 \begin{tikzpicture}[>=stealth', x=0.8cm, y=0.68cm,
@@ -2328,38 +2405,79 @@ $n$ simulated closed-loop trajectories from $\sv_0$ to $\sv_N$ = $n$ sampled roo
 \node[st, visible on=<5->] (sH) at (7.3,0) {$\sv_H$};
 \draw[->, black!40, visible on=<5->] (s2) -- (dots);
 \draw[->, black!40, visible on=<5->] (dots) -- (sH);
-\node[font=\tiny, text=black!60, visible on=<3-5>] at (3.65,-1.95) {noise $\varepsilon_k,\xi_k$ drawn once, then kept fixed: the path is a deterministic chain};
-% step 8: a critic bootstraps the tail
-\node[co, visible on=<12->] (V) at (8.75,0) {$\gamma^H V(\sv_H)$};
-\draw[->, black!40, visible on=<12->] (sH) -- (V);
-% forward tangent and reverse adjoint sweeps
-\draw[visible on=<6->, ->, myGreen3, very thick] (0,-1.95) -- node[below, font=\tiny]{forward: tangents $S_k=\mathrm d\sv_k/\mathrm d\mth$} (7.3,-1.95);
-\draw[visible on=<10->, <-, myOrangeD, very thick] (0,1.6) -- node[above, font=\tiny]{reverse: adjoints $\lambda_k$ (BPTT, what \texttt{jax.grad} does), cost $\approx$ one rollout for any $\dim\mth$} (8.75,1.6);
+\node[font=\tiny, text=black!60, visible on=<3-5>] at (3.65,-1.95) {noise $\varepsilon_k,\xi_k$ drawn once, then kept fixed: the path is a deterministic function of $(\pnu,\mth)$};
+% forward and backward passes
+\draw[visible on=<6->, ->, myGreen3, very thick] (0,-1.95) -- node[below, font=\tiny]{\textbf{forward pass}: run the simulation; AD records every operation} (7.3,-1.95);
+\draw[visible on=<7->, <-, myOrangeD, very thick] (0,1.6) -- node[above, font=\tiny]{\textbf{backward pass}: the chain rule in reverse (BPTT)} (7.3,1.6);
 \end{tikzpicture}
 \end{center}
 \vspace{-.45cm}
 \begin{columns}[T]
-\column{0.53\textwidth}
-\visible<6->{\textbf{Forward sensitivities} (one path, noise $\omega$ fixed)}
-\begin{align*}
-\visible<6->{A_k}&\visible<6->{= \nabla_{\sv} g_{\pnu}\,S_k,\qquad S_0=0}\\
-\visible<7->{S_{k+1}}&\visible<7->{= \partial_{\mth} f_{\mth}+\nabla_{\sv}f_{\mth}\,S_k+\nabla_{\av}f_{\mth}\,A_k}\\
-\visible<8->{\nabla_{\mth}\Jh}&\visible<8->{= \E_\omega\Big[\sum_k\gamma^k\big(\partial_{\mth}\Lth+\nabla_{\sv}\Lth\, S_k+\nabla_{\av}\Lth\, A_k\big)\Big]}
-\end{align*}
-
-\vspace{-.25cm}
-\visible<9->{{\scriptsize For $\nabla_{\pnu}$: same recursion with $A_k=\nabla_{\sv}g_{\pnu}S_k+\nabla_{\pnu}g_{\pnu}$, no $\partial f$ term.}}
-\column{0.45\textwidth}
-\visible<11->{\textbf{Catch}: $S_k$ contains $\prod_i\nabla_{\sv}f_{\mth}$, which explodes or vanishes for long horizons, contacts, chaos}\\[3pt]
-\visible<12->{\textbf{Fix} (SVG, SHAC): differentiate only $H$ steps and bootstrap the tail with a critic
-\begin{align*}
-\hat J_{H}=\E_\omega\big[\textstyle\sum_{k=0}^{H-1}\gamma^k\Lth(\sv_k,\av_k)+\gamma^H V(\sv_H)\big]
-\end{align*}}
+\column{0.5\textwidth}
+\visible<6->{
+\begin{block}{\footnotesize In practice (PyTorch, JAX)}
+\scriptsize
+draw the noise $\omega=(\varepsilon_k,\xi_k)_{k<H}$ once\\[1pt]
+\textbf{forward}: cost $J_\omega(\pnu,\mth)$ of one rollout:\\
+\hspace*{1.2em}$\sv\gets\sv_0$; \ for $k<H$:\\
+\hspace*{2.4em}$\av\gets g_{\pnu}(\sv,\varepsilon_k)$, \ add $\gamma^k\Lth(\sv,\av)$,\\
+\hspace*{2.4em}$\sv\gets f_{\mth}(\sv,\av,\xi_k)$\\[1pt]
+\visible<7->{\textbf{backward}: \ $\big(\nabla_{\pnu}J_\omega,\ \nabla_{\mth}J_\omega\big)=\mathtt{grad}(J_\omega)$\\[1pt]}
+\visible<8->{average over $n$ noise draws $\omega_i$ \ $\Rightarrow$ \ $\nabla_{\pnu}\Jh$, \ $\nabla_{\mth}\Jh$}
+\end{block}}
+\column{0.48\textwidth}
+\begin{itemize}
+\setlength{\itemsep}{3pt}
+\item<6-> \textbf{forward} = the rollout itself; every call of $g_{\pnu}$, $f_{\mth}$, $\Lth$ is recorded
+\item<7-> \textbf{backward} = one reverse sweep through the recorded steps: $\nabla_{\pnu}$ and $\nabla_{\mth}$ together, for any $\dim\pnu,\dim\mth$, at the cost of about one more rollout
+\item<8-> it evaluates the \PD\ fequation path by path with AD.
+\end{itemize}
 \end{columns}
-\vspace{-.3cm}
-\visible<13->{
-{\scriptsize $\checkmark$ exact per-path gradients; low variance if the dynamics are smooth\\
-\ding{56} needs differentiable $f_{\mth},g_{\pnu},\Lth$ (smooth surrogates for contact, $\min$, $\max$) and continuous $\av$, $\mth$}}
+\end{frame}
+
+%-----------------------------------------------------------------------
+\begin{frame}{\normalsize PD gradients: exploding variance and the terminal critic}
+\footnotesize
+\textbf{What the backward pass multiplies}: the effect of $\av_0$ on the state $k$ steps later
+\vspace{-.15cm}
+\[\frac{\mathrm d\sv_k}{\mathrm d\av_0}=\frac{\mathrm d\sv_k}{\mathrm d\sv_{k-1}}\cdots\frac{\mathrm d\sv_2}{\mathrm d\sv_1}\,\frac{\partial\sv_1}{\partial\av_0}\qquad\text{each factor = one closed-loop step through } f_{\mth} \text{ and } g_{\pnu}\]
+\vspace{-.25cm}
+\begin{center}
+\begin{tikzpicture}[>=stealth', x=0.8cm, y=0.48cm,
+  st/.style={circle, draw, fill=white, inner sep=0pt, minimum size=0.46cm, font=\tiny},
+  co/.style={rectangle, rounded corners=2pt, draw=myRed2, fill=myLightRed, inner sep=2pt, font=\tiny}]
+% full horizon
+\node[font=\scriptsize, anchor=east, visible on=<2->] at (-0.4,0) {full horizon};
+\foreach \i/\x/\t in {0/0/\sv_0, 1/1.2/\sv_1, 2/2.4/\sv_2, 3/3.6/\sv_3, 4/6.6/\sv_N}
+  \node[st, visible on=<2->] (f\i) at (\x,0) {$\t$};
+\node[visible on=<2->] (fd) at (5.1,0) {$\cdots$};
+\foreach \a/\b in {f0/f1, f1/f2, f2/f3, f3/fd, fd/f4} \draw[->, black!50, visible on=<2->] (\a) -- (\b);
+\draw[<-, myOrangeD, very thick, visible on=<2->] (0,0.75) -- node[above, font=\tiny]{backward: a product of $N$ Jacobians} (6.6,0.75);
+\node[font=\tiny, anchor=west, align=left, visible on=<3->] at (7.3,0.2) {$1.1^{100}\approx 1.4\cdot10^4$\\$0.9^{100}\approx 3\cdot10^{-5}$};
+% truncated with terminal critic
+\node[font=\scriptsize, anchor=east, visible on=<5->] at (-0.4,-2.0) {SVG, SHAC};
+\foreach \i/\x/\t in {0/0/\sv_0, 1/1.2/\sv_1, 2/2.4/\sv_H}
+  \node[st, visible on=<5->] (h\i) at (\x,-2.0) {$\t$};
+\draw[->, black!50, visible on=<5->] (h0) -- (h1);
+\draw[->, black!50, visible on=<5->] (h1) -- (h2);
+\node[co, visible on=<5->] (hv) at (4.0,-2.0) {$\gamma^H V(\sv_H)$};
+\draw[->, black!50, visible on=<5->] (h2) -- (hv);
+\node[font=\tiny, text=black!50, anchor=west, visible on=<5->] at (hv.east) {the critic summarizes the rest of the episode};
+\draw[<-, myOrangeD, very thick, visible on=<5->] (0,-1.25) -- node[above, font=\tiny]{only $H$ Jacobians, then $\nabla_{\sv}V(\sv_H)$} (4.0,-1.25);
+\end{tikzpicture}
+\end{center}
+\vspace{-.2cm}
+\begin{itemize}
+\setlength{\itemsep}{2pt}
+\item<3-> \textbf{Catch}: for long horizons, contacts or chaotic dynamics the product \textbf{explodes or vanishes} and differs a lot between noise draws $\Rightarrow$ \textbf{high variance}
+\item<4-> \textbf{LR or PD?} Neither always has lower variance: \PD\ wins on smooth, stable systems, \LR\ on chaotic, stiff or contact-rich ones {\tiny(Parmas et al., 2018; Suh et al., 2022)}
+\item<5-> \textbf{Fix}: unroll only $H$ steps and add a \textbf{terminal critic}: \ $J_{\omega,H}=\sum_{k<H}\gamma^k\Lth(\sv_k,\av_k)+\gamma^H V(\sv_H)$
+\item<6-> short $H$: low variance but critic bias; \ SAC is case with no unroll step at all.
+\end{itemize}
+\vspace{-.1cm}
+\visible<7->{
+{\scriptsize $\checkmark$ exact per-path gradients; one backward pass for any $\dim\pnu,\dim\mth$\\
+\ding{56} needs differentiable $f_{\mth},g_{\pnu},\Lth$ (smoothed contact, $\min$, $\max$) and continuous $\av$, $\mth$}}
 \end{frame}
 
 %-----------------------------------------------------------------------
@@ -2378,11 +2496,9 @@ $n$ simulated closed-loop trajectories from $\sv_0$ to $\sv_N$ = $n$ sampled roo
 \visible<3->{\textbf{Assumptions}}
 \begin{enumerate}
 \scriptsize
-\item<3-> \textbf{Smooth}: $\pin,\rth$ (\LR) or $g_{\pnu},f_{\mth}$ (\PD), and $\Lth$ are $C^2$
-\item<4-> \textbf{$\nabla$ and $\E$ commute} (\LR: densities $>0$; \PD: integrable derivatives)
-\item<5-> \textbf{Converged}: $\Fres(\nst,\mth)=0$; a \emph{local} optimum is enough
-\item<6-> \textbf{Regular}: $\nst$ isolated, $A:=\nabla_{\pnu}\Fres$ nonsingular (e.g.\ $A\succ0$)
-\item<7-> \textbf{Same spaces}: $\mth$ changes neither $\mathcal S$ nor $\mathcal A$
+\item<3-> \textbf{Smooth}: $\Fres$ is continuously differentiable in $(\pnu,\mth)$, e.g.\ $\pin,\rth$ (\LR) or $g_{\pnu},f_{\mth}$ (\PD) and $\Lth$ twice differentiable, with $\nabla$ and $\E$ interchangeable
+\item<4-> \textbf{Converged}: training reached $\Fres(\nst,\mth)=0$; a \emph{local} optimum is enough
+\item<5-> \textbf{Regular}: $\nabla_{\pnu}\Fres(\nst,\mth)$ is invertible (e.g.\ positive definite at a local minimum)
 \end{enumerate}
 \column{0.42\textwidth}
 \begin{center}
@@ -2395,68 +2511,134 @@ $n$ simulated closed-loop trajectories from $\sv_0$ to $\sv_N$ = $n$ sampled roo
 \draw[black!45, densely dotted] (2.4,0) -- (2.4,1.8) -- (0,1.8);
 \node[font=\scriptsize, below] at (2.4,0) {$\mth_0$};
 \fill[myBlue3] (2.4,1.8) circle (2pt);
-\draw[visible on=<8->, black!70, thick] (1.3,0.975) -- (3.5,2.625);
-\draw[visible on=<8->, ->, myRed2, thick] (2.4,1.8) -- (3.25,1.8);
-\draw[visible on=<8->, ->, myBlue3, thick] (3.25,1.8) -- (3.25,2.4375);
-\node[visible on=<8->, font=\tiny, below, text=myRed2] at (2.85,1.8) {$\mathrm d\mth$};
-\node[visible on=<8->, font=\tiny, right, text=myBlue3] at (3.25,2.1) {$\kap\,\mathrm d\mth$};
-\node[visible on=<8->, font=\tiny, anchor=south east] at (2.0,1.95) {slope $\kap$};
+\draw[visible on=<6->, black!70, thick] (1.3,0.975) -- (3.5,2.625);
+\draw[visible on=<6->, ->, myRed2, thick] (2.4,1.8) -- (3.25,1.8);
+\draw[visible on=<6->, ->, myBlue3, thick] (3.25,1.8) -- (3.25,2.4375);
+\node[visible on=<6->, font=\tiny, below, text=myRed2] at (2.85,1.8) {$\mathrm d\mth$};
+\node[visible on=<6->, font=\tiny, right, text=myBlue3] at (3.25,2.1) {$\kap\,\mathrm d\mth$};
+\node[visible on=<6->, font=\tiny, anchor=south east] at (2.0,1.95) {slope $\kap$};
 \end{tikzpicture}
 \end{center}
-\visible<9->{
-{\scriptsize\textbf{Toy}: $\Jh(\pnu)=\frac a2\pnu^2-\mth\pnu$, \ so $\nst=\mth/a$\\
-$\Fres=a\pnu-\mth$, \ $A=a$, \ $B=-1$\\
-$\kap=-A^{-1}B=1/a$ \ $\checkmark$}}
+% (toy example: commented out)
+%\visible<7->{
+%{\scriptsize\textbf{Toy}: $\Jh(\pnu)=\frac a2\pnu^2-\mth\pnu$, \ so $\nst=\mth/a$\\
+%$\Fres=a\pnu-\mth$, \ $\nabla_{\pnu}\Fres=a$, \ $\nabla_{\mth}\Fres=-1$\\
+%$\kap=-(\nabla_{\pnu}\Fres)^{-1}\nabla_{\mth}\Fres=1/a$ \ $\checkmark$}}
 \end{columns}
 \vspace{-.25cm}
-\visible<8->{
+\visible<6->{
 \begin{alertblock}{}
-\textbf{IFT}: differentiate $\Fres\big(\nst(\mth),\mth\big)\equiv0$ \ $\Rightarrow$ \ $A\,\kap+B=0$ \ $\Rightarrow$ \ $\boxed{\kap=-A^{-1}B}$, \ \ $B:=\nabla_{\mth}\Fres$\\
-{\scriptsize Only the \textbf{end point} of training matters: no unrolling, any policy class, any policy-gradient method.}
+\textbf{IFT}: differentiate $\Fres\big(\nst(\mth),\mth\big)\equiv0$ \ $\Rightarrow$ \ $\nabla_{\pnu}\Fres\,\kap+\nabla_{\mth}\Fres=0$ \ $\Rightarrow$ \ $\boxed{\kap=-(\nabla_{\pnu}\Fres)^{-1}\,\nabla_{\mth}\Fres}$
 \end{alertblock}}
 \end{frame}
 
+% ===== previous one-slide version (replaced by the PD and LR slides below) =====
+% %-----------------------------------------------------------------------
+% \begin{frame}{\normalsize Computing $\nabla_{\pnu}\Fres$ and $\nabla_{\mth}\Fres$ in practice}
+% \footnotesize
+% \textbf{Only products are needed}, each is \textbf{one more backward pass} through $\Fres$:
+% \vspace{-.15cm}
+% \[(\nabla_{\pnu}\Fres)^\top v=\nabla_{\pnu}\langle\Fres,v\rangle,\qquad(\nabla_{\mth}\Fres)^\top w=\nabla_{\mth}\langle\Fres,w\rangle\]
+% \vspace{-.45cm}
+%
+% \visible<2->{
+% \begin{block}{\footnotesize \PD\ (SVG): $\Fres$ is itself computed by AD}
+% \begin{itemize}
+% \setlength{\itemsep}{0pt}
+% \item \textbf{Forward}: fix the noise $\omega$, simulate a rollout, compute its cost $J_\omega(\pnu,\mth)$
+% \item \textbf{Backward}: $\Fres=\mathtt{grad}_{\pnu}J_\omega$, averaged over the noise draws
+% \item<3-> \textbf{Products}: one more backward pass through this $\Fres$ (\texttt{grad} of \texttt{grad})
+% \item<3-> AD covers all second derivatives along the path ($\Lth$, $f_{\mth}$, $g_{\pnu}$)
+% \end{itemize}
+% \end{block}}
+% \vspace{-.1cm}
+% \visible<4->{
+% \begin{block}{\footnotesize \LR\ (PPO, A2C): $\Fres=\E\big[\sum_k\gamma^k\nabla_{\pnu}\log\pi_k\,Q_k\big]$}
+% $(\pnu,\mth)$ act on $\Fres$ in \textbf{three} ways:
+% \begin{enumerate}
+% \setlength{\itemsep}{0pt}
+% \item the policy term $\nabla_{\pnu}\log\pi_k$ \hfill \textbf{policy curvature}
+% \item<5-> the cost-to-go $Q_k$ \hfill \textbf{critic sensitivity}
+% \item<6-> which trajectories are sampled (re-weighting) \hfill \textbf{sampling}
+% \end{enumerate}
+% \visible<7->{\texttt{grad} of the PPO gradient sees \textbf{only 1} (samples, critic are constants for AD); 2, 3 are added explicitly}
+% \end{block}}
+% \vspace{-.1cm}
+% \visible<8->{{\scriptsize \textbf{In practice}: if $\nabla_{\pnu}\Fres$ is ill-conditioned, damp it ($+\varepsilon I$) or truncate its eigendecomposition}}
+% \vfill
+% \parbox{0.9\textwidth}{\tiny A.\,S.~Anand et al., \textit{Bi-Level RL Pathway for Sim-to-Real Optimality}, RLC 2026 (\LR); \ \textit{Gradient-Based Co-Design of RL Policies with Differentiable Simulators}, TMLR 2026 (\PD).}
+% \end{frame}
+
 %-----------------------------------------------------------------------
-\begin{frame}{\normalsize Computing $A$ and $B$ for \LR\ policies (PPO, A2C)}
+\begin{frame}{\normalsize Computing $\nabla_{\pnu}\Fres$ and $\nabla_{\mth}\Fres$: \PD\ (SVG)}
 \footnotesize
-\textbf{Recall}: $A=\nabla_{\pnu}\Fres$, \ $B=\nabla_{\mth}\Fres$, \ $\Fres=\E_{\tau\sim p_{\pnu,\mth}}\big[\sum_k\gamma^k\nabla_{\pnu}\log\pi_k\,Q_k\big]$: both the integrand ($Q_k$) and the \textbf{Markov chain} $p_{\pnu,\mth}$ depend on $(\pnu,\mth)$\\[4pt]
-\begin{block}{\footnotesize The parameters act from three places \ (Anand et al., 2026, Theorem 1)}
-$\pi_k=\pin(\av_k|\sv_k)$, \ $Q_k=Q^{\pin}_{\mth}(\sv_k,\av_k)$:
-\begin{align*}
-A&=\E\Big[\sum_k\gamma^k\Big(\underbrace{\nabla^2_{\pnu\pnu}\log\pi_k\,Q_k}_{\text{the node itself}}\visible<2->{{}+\underbrace{\nabla_{\pnu}\log\pi_k\,(\nabla_{\pnu}Q_k)^\top}_{\text{edges below (critic)}}}\visible<3->{{}+\underbrace{\nabla_{\pnu}\log\pi_k\,Q_k\,(W^{\pnu}_k)^\top}_{\text{edges above: the Markov chain}}}\Big)\Big]\\[4pt]
-\visible<4->{B}&\visible<4->{=\E\Big[\sum_k\gamma^k\Big(\underbrace{\nabla_{\pnu}\log\pi_k\,(\nabla_{\mth}Q_k)^\top}_{\text{edges below (critic)}}+\underbrace{\nabla_{\pnu}\log\pi_k\,Q_k\,(W^{\mth}_k)^\top}_{\text{edges above: the Markov chain}}\Big)\Big]}
-\end{align*}
-\end{block}
-\visible<5->{
+$\Fres=\nabla_{\pnu}\Jh$ is the policy gradient (a vector, the size of $\pnu$). Its derivatives are matrices:
 \begin{itemize}
-\item \textbf{Markov-chain sensitivity} (edges above): $W^{\pnu}_k=\sum_{i\le k}\nabla_{\pnu}\log\pi_i$, \ $W^{\mth}_k=\sum_{i\le k}\nabla_{\mth}\log\rho_{\mth,i}$
-\item<6-> \textbf{Critic sensitivities} (edges below): $\nabla_{\pnu}Q_k$, $\nabla_{\mth}Q_k$, learned like a critic
-\item<7-> \textbf{Only} $B$ differentiates in $\mth$: through the model edges $\rth$ and the costs $\Lth$ \ (PPO: $Q\to$ advantage)
-\end{itemize}}
+\setlength{\itemsep}{0pt}
+\item $\nabla_{\pnu}\Fres$: how $\Fres$ changes when the \textbf{policy} $\pnu$ changes (the Hessian of $\Jh$)
+\item $\nabla_{\mth}\Fres$: how $\Fres$ changes when the \textbf{simulator} $\mth$ changes
+\end{itemize}
+\visible<2->{$\kap$ is only applied to vectors, so we need only \textbf{products}, never the matrices. A product is the gradient of a scalar ($v$ fixed):}
+\vspace{-.15cm}
+\visible<2->{\[(\nabla_{\pnu}\Fres)^\top v=\nabla_{\pnu}\big(\Fres^\top v\big),\qquad(\nabla_{\mth}\Fres)^\top v=\nabla_{\mth}\big(\Fres^\top v\big)\]}
+\vspace{-.5cm}
+\visible<3->{
+\begin{block}{\footnotesize \PD\ in code: three passes through the same rollout}
+\begin{enumerate}
+\setlength{\itemsep}{1pt}
+\item \textbf{Forward}: fix the noise, simulate $\av_k=g_{\pnu}(\sv_k,\varepsilon_k)$, $\sv_{k+1}=f_{\mth}(\sv_k,\av_k,\xi_k)$, add up the cost $J_\omega(\pnu,\mth)$
+\item<4-> \textbf{Backward}: $\Fres=\mathtt{grad}_{\pnu}J_\omega$, averaged over the noise draws; keep its AD graph\\(PyTorch: \texttt{create\_graph=True}; JAX: nest \texttt{grad})
+\item<5-> \textbf{Second backward}: differentiate the scalar $\Fres^\top v$ again, w.r.t.\ $\pnu$ and w.r.t.\ $\mth$: the two products above
+\end{enumerate}
+\end{block}}
+\visible<6->{With the noise fixed, the whole rollout is a function of $(\pnu,\mth)$; the second pass differentiates it again, so all second derivatives of $g_{\pnu}$, $f_{\mth}$, $\Lth$ (in $\pnu$, in $\mth$, mixed) are included}
 \vfill
-\parbox{0.8\textwidth}{\tiny A.\,S.~Anand et al., \textit{Bi-Level Reinforcement Learning Pathway for Sim-to-Real Optimality}, RLC 2026.}
+\parbox{0.9\textwidth}{\tiny A.\,S.~Anand et al., \textit{Gradient-Based Co-Design of RL Policies with Differentiable Simulators}, TMLR 2026.}
 \end{frame}
 
 %-----------------------------------------------------------------------
-\begin{frame}{\normalsize Computing $A$ and $B$ for \PD\ policies (SVG)}
+\begin{frame}{\normalsize Computing $\nabla_{\pnu}\Fres$ and $\nabla_{\mth}\Fres$: \LR\ (PPO, A2C)}
 \footnotesize
-\textbf{Recall}: the noise $\omega$ has a \textbf{fixed} distribution, so the Markov chain changes only by \textbf{moving the path} $z_k=(\sv_k,\av_k)$, smoothly in $(\pnu,\mth)$:
-\begin{align*}
-\Fres=\nabla_{\pnu}\Jh=\E_\omega\Big[\sum_k\gamma^k\,\nabla_{z}\Lth(z_k)\,Z^{\pnu}_k\Big],\qquad Z^{\pnu}_k=\frac{\mathrm dz_k}{\mathrm d\pnu},\quad Z^{\mth}_k=\frac{\mathrm dz_k}{\mathrm d\mth}\ \ \text{(forward sensitivities)}
-\end{align*}
-\visible<2->{\textbf{Differentiate once more along the same path} \ (A.S. Anand, 2026)}
-\begin{align*}
-\visible<2->{A}&\visible<2->{=\E_\omega\Big[\sum_k\gamma^k\Big(\underbrace{(Z^{\pnu}_k)^\top\nabla^2_{zz}\Lth\,Z^{\pnu}_k}_{\text{curvature of the cost}}+\underbrace{\nabla_z\Lth\,Z^{\pnu\pnu}_k}_{\text{curvature of the path}}\Big)\Big]}\\[4pt]
-\visible<3->{B}&\visible<3->{=\E_\omega\Big[\sum_k\gamma^k\Big(\underbrace{(Z^{\pnu}_k)^\top\partial_{\mth}\nabla_z\Lth}_{\mth\text{ in the cost}}}\visible<4->{{}+\underbrace{(Z^{\pnu}_k)^\top\nabla^2_{zz}\Lth\,Z^{\mth}_k}_{\text{the path moves with }\mth}}\visible<5->{{}+\underbrace{\nabla_z\Lth\,Z^{\pnu\mth}_k}_{\mth\text{ bends the sensitivities}}}\visible<3->{\Big)\Big]}
-\end{align*}
-\visible<5->{{\scriptsize $Z^{\pnu\pnu}_k$, $Z^{\pnu\mth}_k$: second-order sensitivities; they bring in $\nabla^2 f_{\mth}$, \ $\nabla^2 g_{\pnu}$, \ $\partial_{\mth}\nabla f_{\mth}$}}
+The \LR\ policy gradient, with $\pi_k=\pin(\av_k|\sv_k)$ and $Q_k$ the cost-to-go:
+\vspace{-.15cm}
+\[\Fres(\pnu,\mth)=\E_{\tau\sim p_{\pnu,\mth}}\Big[\sum_k\gamma^k\,\nabla_{\pnu}\log\pi_k\;Q_k\Big]\]
+\vspace{-.35cm}
+
+\visible<2->{$(\pnu,\mth)$ enter in \textbf{three} places: $\nabla_{\pnu}\log\pi_k$, $Q_k$ and the sampling $p_{\pnu,\mth}$.  $x=\pnu$ or $x=\mth$:}
+\vspace{-.15cm}
+\visible<2->{\[\nabla_x\Fres=\E\Big[\sum_k\gamma^k\Big(\underbrace{\nabla_x\nabla_{\pnu}\log\pi_k\,Q_k}_{\text{1. policy curvature}}+\underbrace{\nabla_{\pnu}\log\pi_k\,\nabla_xQ_k^\top}_{\text{2. critic sensitivity}}+\underbrace{\nabla_{\pnu}\log\pi_k\,Q_k\,\nabla_x\log p(\tau_{\le k})^\top}_{\text{3. sampling}}\Big)\Big]\]}
+\vspace{-.3cm}
+
+\visible<2->{{\scriptsize $p(\tau_{\le k})$: probability of the sampled history up to step $k$}}\\[1pt]
+\uncover<3->{{\scriptsize\renewcommand{\arraystretch}{0.92}
+\begin{tabular}{@{}l@{\hspace{1.2em}}l@{\hspace{1.2em}}l@{\hspace{1.2em}}l@{}}
+\uncover<3->{} & \uncover<3->{in $\nabla_{\pnu}\Fres$} & \uncover<3->{in $\nabla_{\mth}\Fres$} & \uncover<3->{computed by}\\\hline
+\uncover<3->{1. policy curvature} & \uncover<3->{$\nabla^2_{\pnu}\log\pi_k$} & \uncover<3->{$0$} & \uncover<3->{one more backward pass}\\
+\uncover<4->{2. critic sensitivity} & \uncover<4->{$\nabla_{\pnu}Q_k$} & \uncover<4->{$\nabla_{\mth}Q_k$} & \uncover<4->{differentiated Bellman eq.}\\
+\uncover<5->{3. sampling} & \uncover<5->{$\sum_{j\le k}\nabla_{\pnu}\log\pi_j$} & \uncover<5->{$\sum_{j<k}\nabla_{\mth}\log\rth(\sv_{j+1}|\sv_j,\av_j)$} & \uncover<5->{sampled log-probabilities}
+\end{tabular}}}\\[1pt]
 \begin{itemize}
-\item<6-> $A\,v$ = \texttt{jvp} of $\Fres$, \ $B^\top w$ = \texttt{vjp} of $\Fres$ in $\mth$ \ (a few rollouts each)
-\item<7-> \textbf{In practice} $A$ may be ill-conditioned or indefinite: use $A+\varepsilon I$ or a truncated eigendecomposition
+\setlength{\itemsep}{0pt}
+\item<6-> Unlike \PD, AD gives \textbf{only term 1} (policy curvature)
+\begin{itemize}
+\item {\scriptsize The samples are fixed data; AD misses that $(\pnu,\mth)$ change \textbf{which} ones are drawn}
 \end{itemize}
-\vfill
-\parbox{0.8\textwidth}{\tiny A.\,S.~Anand et al., \textit{Gradient-Based Co-Design of Reinforcement Learning Policies with Differentiable Simulators}, TMLR 2026}
+\item<7-> Terms 2 and 3 are \textbf{estimated separately}; term 3 needs the simulator density $\rth$
+\item<8-> \textbf{Critic sensitivity: difficult, but possible}
+\begin{itemize}
+\item {\scriptsize \textcolor{myRed2}{\textbf{Main issue}: the critic network $Q_w(\sv,\av)$ has no input $\pnu$, $\mth$, so AD cannot give $\nabla Q_k$}}
+\item {\scriptsize Fix: differentiating $Q_k=\Lth+\gamma\,\E[Q_{k+1}]$ gives $\nabla Q_k=c_k+\gamma\,\E[\nabla Q_{k+1}]$: the \textbf{same Bellman structure} with a new cost $c_k$, so $\nabla Q_k$ is learned like $Q_k$}
+\end{itemize}
+\end{itemize}
+% (reference removed for space: A.\,S.~Anand et al., Bi-Level RL Pathway for Sim-to-Real Optimality, RLC 2026)
 \end{frame}
+% (A4: the detailed LR/PD sensitivity slides are in the backup section after the thank-you slide)
+
+%-----------------------------------------------------------------------
+% (A4: moved to backup)
+
+%-----------------------------------------------------------------------
+% (A4: moved to backup)
 
 %-----------------------------------------------------------------------
 \begin{frame}{\normalsize Where do we use $\kap$? (1) Sim-to-real: tune the simulator}
@@ -2522,62 +2704,63 @@ The system is \textbf{to be designed}: $\mth$ as the \textbf{design space} (arm 
 \end{frame}
 
 %-----------------------------------------------------------------------
-\begin{frame}{\normalsize Where is the trained policy evaluated?}
-\footnotesize
-\begin{center}
-\begin{tikzpicture}[>=stealth', x=1cm, y=1cm,
-  bx/.style={rounded corners, minimum width=2.1cm, minimum height=1.35cm},
-  pol/.style={draw=myGreen3, fill=myLightGreen, rounded corners, inner sep=3pt, font=\scriptsize},
-  capt/.style={font=\tiny, anchor=south}]
-% ---- sim-to-real
-\node[font=\scriptsize\bfseries, anchor=west] at (-0.1,1.05) {Sim-to-real};
-\node[bx, draw=myBlue3, fill=myLightBlue] (s1) at (1,0) {};
-\pic[myBlue3] at (1,0.12) {drone=0.45};
-\node[capt] at (s1.south) {simulator $\mth$};
-\node[pol] (n1) at (3.35,0) {$\nst(\mth)$};
-\draw[->, thick, myGreen3] (s1) -- node[above, font=\tiny]{train} (n1);
-\node[visible on=<2->, bx, draw=black!50, fill=black!4] (r1) at (6.0,0) {};
-\pic[black, visible on=<2->] at (6.0,0.12) {drone=0.55};
-\node[visible on=<2->, capt] at (r1.south) {real drone: \textbf{fixed}};
-\draw[visible on=<2->, ->, thick, myOrangeD] (n1) -- node[above, font=\tiny]{evaluate} (r1);
-\node[visible on=<2->, anchor=west, align=left] at (7.25,0) {$\Jreal\big(\nst(\mth)\big)$\\[1pt] {\tiny the judge does not change}};
-% ---- co-design
-\node[visible on=<3->, font=\scriptsize\bfseries, anchor=west] at (-0.1,-1.25) {Co-design};
-\node[visible on=<3->, bx, draw=myRed2, fill=myLightRed] (s2) at (1,-2.3) {};
-\pic[myRed2, visible on=<3->] at (1,-2.18) {drone=0.55};
-\node[visible on=<3->, capt] at (s2.south) {design $\mth$};
-\node[visible on=<3->, pol] (n2) at (3.35,-2.3) {$\nst(\mth)$};
-\draw[visible on=<3->, ->, thick, myGreen3] (s2) -- node[above, font=\tiny]{train} (n2);
-\node[visible on=<4->, bx, draw=myRed2, fill=myLightRed] (r2) at (6.0,-2.3) {};
-\pic[myRed2, visible on=<4->] at (6.0,-2.18) {drone=0.55};
-\node[visible on=<4->, capt] at (r2.south) {the \textbf{same} design $\mth$};
-\draw[visible on=<4->, ->, thick, myOrangeD] (n2) -- node[above, font=\tiny]{evaluate} (r2);
-\node[visible on=<4->, anchor=west, align=left] at (7.25,-2.3) {$J^D\big(\nst(\mth),\mth\big)$\\[1pt] {\tiny the judge changes with $\mth$}};
-\draw[visible on=<4->, dashed, myRed2, thick] (s2.south) -- ++(0,-0.45) -| node[pos=0.25, below, font=\tiny]{one system: change $\mth$ and both change} (r2.south);
-\end{tikzpicture}
-\end{center}
-\visible<5->{
-\begin{center}
-\renewcommand{\arraystretch}{1.5}
-\begin{tabular}{lll}
-sim-to-real: & $\Jreal\big(\nst(\mth)\big)$ & $\mth$ acts only through the \textbf{policy}\\
-co-design: & $J^D\big(\nst(\mth),\mth\big)$ & $\mth$ acts through the \textbf{policy} \emph{and} the \textbf{evaluating system}
-\end{tabular}
-\end{center}}
-\visible<6->{
-\begin{alertblock}{}
-\centering Co-design: $\mth$ acts \textbf{twice}, through the re-trained policy \emph{and} the system that evaluates it.\\
-So only co-design has a \textbf{direct} term $\partial_{\mth}J^D$ (policy fixed, system changed).
-\end{alertblock}}
-\end{frame}
+% ===== A5: cut; its message is now a row of the table on the outer-gradient slide =====
+% \begin{frame}{\normalsize Where is the trained policy evaluated?}
+% \footnotesize
+% \begin{center}
+% \begin{tikzpicture}[>=stealth', x=1cm, y=1cm,
+%   bx/.style={rounded corners, minimum width=2.1cm, minimum height=1.35cm},
+%   pol/.style={draw=myGreen3, fill=myLightGreen, rounded corners, inner sep=3pt, font=\scriptsize},
+%   capt/.style={font=\tiny, anchor=south}]
+% % ---- sim-to-real
+% \node[font=\scriptsize\bfseries, anchor=west] at (-0.1,1.05) {Sim-to-real};
+% \node[bx, draw=myBlue3, fill=myLightBlue] (s1) at (1,0) {};
+% \pic[myBlue3] at (1,0.12) {drone=0.45};
+% \node[capt] at (s1.south) {simulator $\mth$};
+% \node[pol] (n1) at (3.35,0) {$\nst(\mth)$};
+% \draw[->, thick, myGreen3] (s1) -- node[above, font=\tiny]{train} (n1);
+% \node[visible on=<2->, bx, draw=black!50, fill=black!4] (r1) at (6.0,0) {};
+% \pic[black, visible on=<2->] at (6.0,0.12) {drone=0.55};
+% \node[visible on=<2->, capt] at (r1.south) {real drone: \textbf{fixed}};
+% \draw[visible on=<2->, ->, thick, myOrangeD] (n1) -- node[above, font=\tiny]{evaluate} (r1);
+% \node[visible on=<2->, anchor=west, align=left] at (7.25,0) {$\Jreal\big(\nst(\mth)\big)$\\[1pt] {\tiny the judge does not change}};
+% % ---- co-design
+% \node[visible on=<3->, font=\scriptsize\bfseries, anchor=west] at (-0.1,-1.25) {Co-design};
+% \node[visible on=<3->, bx, draw=myRed2, fill=myLightRed] (s2) at (1,-2.3) {};
+% \pic[myRed2, visible on=<3->] at (1,-2.18) {drone=0.55};
+% \node[visible on=<3->, capt] at (s2.south) {design $\mth$};
+% \node[visible on=<3->, pol] (n2) at (3.35,-2.3) {$\nst(\mth)$};
+% \draw[visible on=<3->, ->, thick, myGreen3] (s2) -- node[above, font=\tiny]{train} (n2);
+% \node[visible on=<4->, bx, draw=myRed2, fill=myLightRed] (r2) at (6.0,-2.3) {};
+% \pic[myRed2, visible on=<4->] at (6.0,-2.18) {drone=0.55};
+% \node[visible on=<4->, capt] at (r2.south) {the \textbf{same} design $\mth$};
+% \draw[visible on=<4->, ->, thick, myOrangeD] (n2) -- node[above, font=\tiny]{evaluate} (r2);
+% \node[visible on=<4->, anchor=west, align=left] at (7.25,-2.3) {$J^D\big(\nst(\mth),\mth\big)$\\[1pt] {\tiny the judge changes with $\mth$}};
+% \draw[visible on=<4->, dashed, myRed2, thick] (s2.south) -- ++(0,-0.45) -| node[pos=0.25, below, font=\tiny]{one system: change $\mth$ and both change} (r2.south);
+% \end{tikzpicture}
+% \end{center}
+% \visible<5->{
+% \begin{center}
+% \renewcommand{\arraystretch}{1.5}
+% \begin{tabular}{lll}
+% sim-to-real: & $\Jreal\big(\nst(\mth)\big)$ & $\mth$ acts only through the \textbf{policy}\\
+% co-design: & $J^D\big(\nst(\mth),\mth\big)$ & $\mth$ acts through the \textbf{policy} \emph{and} the \textbf{evaluating system}
+% \end{tabular}
+% \end{center}}
+% \visible<6->{
+% \begin{alertblock}{}
+% \centering Co-design: $\mth$ acts \textbf{twice}, through the re-trained policy \emph{and} the system that evaluates it.\\
+% So only co-design has a \textbf{direct} term $\partial_{\mth}J^D$ (policy fixed, system changed).
+% \end{alertblock}}
+% \end{frame}
 
 %-----------------------------------------------------------------------
 \begin{frame}{\normalsize Using $\kap$: the gradient of the outer objective}
 \footnotesize
-\textbf{In both problems} we tune $\mth$ with the gradient of an \textbf{outer objective} $J^{\mathrm{out}}\big(\nst(\mth),\mth\big)$ that \textbf{judges} the trained policy. The blocker of slide 13 was $\nabla_{\mth}\pi_{\mth}=\nabla_{\pnu}\pin\,\kap$: now computable.
+\textbf{In both problems} we tune $\mth$ with the gradient of an \textbf{outer objective} $J^{\mathrm{out}}\big(\nst(\mth),\mth\big)$ that \textbf{judges} the trained policy. The blocker was $\nabla_{\mth}\pi_{\mth}=\nabla_{\pnu}\pin\,\kap$: now computable.
 \vspace{-.1cm}
 \begin{align*}
-\nabla_{\mth}J^{\mathrm{out}}\big(\nst(\mth),\mth\big)=\underbrace{\partial_{\mth}J^{\mathrm{out}}}_{\text{direct: }\pnu\text{ fixed}}+\underbrace{\nabla_{\pnu}J^{\mathrm{out}}\,\kap}_{\text{indirect: the policy re-adapts}},\qquad \kap=-A^{-1}B
+\nabla_{\mth}J^{\mathrm{out}}\big(\nst(\mth),\mth\big)=\underbrace{\partial_{\mth}J^{\mathrm{out}}}_{\text{direct: }\pnu\text{ fixed}}+\underbrace{\nabla_{\pnu}J^{\mathrm{out}}\,\kap}_{\text{indirect: the policy re-adapts}},\qquad \kap=-(\nabla_{\pnu}\Fres)^{-1}\nabla_{\mth}\Fres
 \end{align*}
 \begin{center}
 \scriptsize
@@ -2586,16 +2769,17 @@ So only co-design has a \textbf{direct} term $\partial_{\mth}J^D$ (policy fixed,
  & \textbf{Sim-to-real} & \textbf{Co-design}\\ \hline
 \uncover<2->{$\mth$} & \uncover<2->{simulator parameters} & \uncover<2->{design of the system}\\
 \uncover<3->{$J^{\mathrm{out}}$} & \uncover<3->{$\Jreal(\nst)$, on the real robot} & \uncover<3->{$J^D(\nst,\mth)+C(\mth)$, in the simulator}\\
-\uncover<4->{direct term} & \uncover<4->{$0$ (the real robot ignores $\mth$)} & \uncover<4->{$\neq0$ ($\mth$ changes the system)}\\
-\uncover<5->{$\nabla_{\pnu}J^{\mathrm{out}}$} & \uncover<5->{\LR, from real rollouts} & \uncover<5->{\PD\ (AD), in the simulator}\\
+\uncover<4->{policy judged on} & \uncover<4->{the fixed real robot} & \uncover<4->{its own design $\mth$ (changes with $\mth$)}\\
+\uncover<5->{direct term} & \uncover<5->{$0$ (the real robot ignores $\mth$)} & \uncover<5->{$\neq0$ ($\mth$ changes the system)}\\
+\uncover<6->{$\nabla_{\pnu}J^{\mathrm{out}}$} & \uncover<6->{\LR, from real rollouts} & \uncover<6->{\PD\ (AD), in the simulator}\\
 \end{tabular}
 \end{center}
-\visible<6->{
-\textbf{Adjoint trick} (never form $\kap$): with $g=\nabla_{\pnu}J^{\mathrm{out}}$, \ $g^\top\kap=-g^\top A^{-1}B$, so
+\visible<7->{
+\textbf{Adjoint trick} (never form $\kap$): with $g=\nabla_{\pnu}J^{\mathrm{out}}$, \ $g^\top\kap=-g^\top(\nabla_{\pnu}\Fres)^{-1}\nabla_{\mth}\Fres$, so
 \begin{enumerate}
 \scriptsize
-\item solve $A^\top\lambda=g$: one matrix-free linear solve in $\dim\pnu$ (CG, MINRES, GMRES)
-\item<7-> indirect term $=-B^\top\lambda$: one vector--Jacobian product ($>100\times$ faster)
+\item solve $(\nabla_{\pnu}\Fres)^\top\lambda=g$: one matrix-free linear solve in $\dim\pnu$ (CG, MINRES, GMRES)
+\item<8-> indirect term $=-(\nabla_{\mth}\Fres)^\top\lambda$: one vector--Jacobian product ($>100\times$ faster)
 \end{enumerate}}
 \end{frame}
 
@@ -2664,15 +2848,15 @@ So only co-design has a \textbf{direct} term $\partial_{\mth}J^D$ (policy fixed,
 \section{Examples}
 
 %-----------------------------------------------------------------------
-\begin{frame}{\normalsize Example 1: Sim-to-real RL (and Dyna-style MBRL)}
+\begin{frame}{\normalsize Example 1: Sim-to-real with bi-level PPO}
 \footnotesize
 \tikzstyle{Sys_block} = [rectangle, draw, fill=none, text width=2.3cm, text centered, rounded corners, inner sep=2pt]
 \tikzstyle{Opt_block} = [rectangle, draw, fill=myLightGreen, text width=2.0cm, text centered, rounded corners, inner sep=3pt]
 \tikzstyle{ID_block} = [rectangle, draw, fill=myLightBlue, text width=2.0cm, text centered, rounded corners, inner sep=3pt]
 \tikzstyle{Out_block} = [rectangle, draw, fill=myLightRed, text width=2.3cm, text centered, rounded corners, inner sep=3pt]
 \begin{columns}[T]
-\column{0.5\textwidth}
-\begin{tikzpicture}[->,>=stealth', font=\scriptsize]
+\column{0.42\textwidth}
+\begin{tikzpicture}[->,>=stealth', font=\scriptsize, scale=0.72, every node/.style={transform shape}]
 \node[ID_block] (sim) at (0,0) {\textbf{Simulator}\\ $\hat\sv_+\sim\rth(\cdot|\sv,\av)$\\ cost $\Lth$};
 \node[Opt_block] (pol) at (0,-2.2) {\textbf{In-sim PPO}\\ $\pnu\to\nst(\mth)$};
 \node[Sys_block] (real) at (3.25,-2.3) {\includegraphics[width=1.9cm]{RLRL/quad2d_task.pdf}\\[-1pt] \textbf{Real system} $\rho$, $L$};
@@ -2685,90 +2869,136 @@ So only co-design has a \textbf{direct} term $\partial_{\mth}J^D$ (policy fixed,
 \draw[myBlue3, dashed, thick] (pol.north east) to[bend right=12] node[pos=0.68, above left=0pt, font=\tiny, fill=white, inner sep=1pt]{$\kap$ (IFT)} ($(out.south west)!0.35!(out.south east)$);
 \draw[blue, thick, -] ($(sim.north west)+(-0.15,0.15)$) rectangle ($(pol.south east)+(0.15,-0.15)$);
 \node[font=\tiny, text=blue, anchor=north] at ($(pol.south)+(0,-0.15)$) {in-sim};
-\end{tikzpicture}\\[2pt]
-\visible<4->{{\scriptsize \textbf{Converges} almost surely on three timescales: critics \textbf{fast}, policy $\pnu$ \textbf{medium}, simulator $\mth$ \textbf{slow}}}
-\column{0.48\textwidth}
-{\scriptsize \textbf{Recall} (slide 26): tune the simulator $\mth$ so that the policy trained in it is best on the real robot.}\\[3pt]
-\textbf{Bi-level RL}
+\end{tikzpicture}
+\column{0.56\textwidth}
+{\scriptsize \textbf{Recall} (slide 25): tune $\mth$ so that the policy trained in sim is best on the robot}
+\vspace{-.15cm}
 \begin{align*}
-\min_{\mth}&\quad \Jreal(\pi_{\nst}) = \E_{\rho,\,\pi_{\nst}}\Big[\sum_k\gamma^k L(\sv_k,\av_k)\Big]\\
-\text{s.t.}&\quad \nabla_{\pnu}\Jh(\nst)=0
+\min_{\mth}\ \Jreal\big(\nst(\mth)\big)\quad \text{s.t.}\quad \nabla_{\pnu}\Jh(\nst)=0
 \end{align*}
+\vspace{-.55cm}
 \begin{itemize}
-\item<2-> \textbf{In-sim}: standard RL in the simulator (PPO, \LR)
-\item<3-> \textbf{Real world}: \LR\ policy gradient on real data using $\kap$
+\setlength{\itemsep}{1pt}
+\item<2-> \textbf{In sim}: PPO trains $\nst(\mth)$ (warm start)
+\item<3-> \textbf{On the robot}: \LR\ gradient $\hat g$, \ $\mth\leftarrow\mth-\alpha\,\kap^\top\hat g$
+\item<4-> \textbf{Converges} a.s. (critics fast, policy medium, $\mth$ slow)
 \end{itemize}
 \end{columns}
+\vspace{.05cm}
+\visible<5->{\textbf{2D quadrotor} (safe-control-gym): the simulator starts with wrong mass and arm length\\[1pt]
+\centering\includegraphics[width=0.86\textwidth]{Figures/SimToReal/quadcopter.pdf}\par}
 \vspace{-.25cm}
-\visible<5->{
-\textbf{Remarks}
-\begin{itemize}
-\item Optimal $\mth$ are not unique: pick the most ``accurate'' one (fitting loss as regularizer)
-\item \visible<6->{\textbf{Dyna-style MBRL}: $\rth$ is learned; the real-world gradient complements MLE}
-\item \visible<7->{vs.\ fine-tuning $\pnu$ on hardware: $\mth$ is small, physical and explainable}
-\end{itemize}}
+\visible<6->{{\scriptsize the in-sim policy (red dotted) misses the goal; bi-level PPO closes the gap, with mass $\to\approx0.85\,m_0$: \textbf{a wrong model, but the optimal policy}}}
 \end{frame}
 
+% ===== A6: original Example 1 slide (merged above) =====
+% \begin{frame}{\normalsize Example 1: Sim-to-real RL (and Dyna-style MBRL)}
+% \footnotesize
+% \tikzstyle{Sys_block} = [rectangle, draw, fill=none, text width=2.3cm, text centered, rounded corners, inner sep=2pt]
+% \tikzstyle{Opt_block} = [rectangle, draw, fill=myLightGreen, text width=2.0cm, text centered, rounded corners, inner sep=3pt]
+% \tikzstyle{ID_block} = [rectangle, draw, fill=myLightBlue, text width=2.0cm, text centered, rounded corners, inner sep=3pt]
+% \tikzstyle{Out_block} = [rectangle, draw, fill=myLightRed, text width=2.3cm, text centered, rounded corners, inner sep=3pt]
+% \begin{columns}[T]
+% \column{0.5\textwidth}
+% \begin{tikzpicture}[->,>=stealth', font=\scriptsize]
+% \node[ID_block] (sim) at (0,0) {\textbf{Simulator}\\ $\hat\sv_+\sim\rth(\cdot|\sv,\av)$\\ cost $\Lth$};
+% \node[Opt_block] (pol) at (0,-2.2) {\textbf{In-sim PPO}\\ $\pnu\to\nst(\mth)$};
+% \node[Sys_block] (real) at (3.25,-2.3) {\includegraphics[width=1.9cm]{RLRL/quad2d_task.pdf}\\[-1pt] \textbf{Real system} $\rho$, $L$};
+% \node[Out_block] (out) at (3.25,0.15) {\textbf{Real-world RL}\\ $\mth\leftarrow\mth-\alpha\,\kap^\top\hat g$};
+% \path (sim) edge[bend left=22] node[right]{data} (pol)
+%       (pol) edge[bend left=22] node[left]{$\av$} (sim)
+%       (pol.east) edge node[above, pos=0.4, font=\tiny]{deploy} (real.west |- pol.east)
+%       (real) edge node[right]{real data $\hat g$} (out)
+%       (out) edge node[above]{$\Delta\mth$} (sim);
+% \draw[myBlue3, dashed, thick] (pol.north east) to[bend right=12] node[pos=0.68, above left=0pt, font=\tiny, fill=white, inner sep=1pt]{$\kap$ (IFT)} ($(out.south west)!0.35!(out.south east)$);
+% \draw[blue, thick, -] ($(sim.north west)+(-0.15,0.15)$) rectangle ($(pol.south east)+(0.15,-0.15)$);
+% \node[font=\tiny, text=blue, anchor=north] at ($(pol.south)+(0,-0.15)$) {in-sim};
+% \end{tikzpicture}\\[2pt]
+% \visible<4->{{\scriptsize \textbf{Converges} almost surely on three timescales: critics \textbf{fast}, policy $\pnu$ \textbf{medium}, simulator $\mth$ \textbf{slow}}}
+% \column{0.48\textwidth}
+% {\scriptsize \textbf{Recall} (slide 28): tune the simulator $\mth$ so that the policy trained in it is best on the real robot.}\\[3pt]
+% \textbf{Bi-level RL}
+% \begin{align*}
+% \min_{\mth}&\quad \Jreal(\pi_{\nst}) = \E_{\rho,\,\pi_{\nst}}\Big[\sum_k\gamma^k L(\sv_k,\av_k)\Big]\\
+% \text{s.t.}&\quad \nabla_{\pnu}\Jh(\nst)=0
+% \end{align*}
+% \begin{itemize}
+% \item<2-> \textbf{In-sim}: standard RL in the simulator (PPO, \LR)
+% \item<3-> \textbf{Real world}: \LR\ policy gradient on real data using $\kap$
+% \end{itemize}
+% \end{columns}
+% \vspace{-.25cm}
+% \visible<5->{
+% \textbf{Remarks}
+% \begin{itemize}
+% \item Optimal $\mth$ are not unique: pick the most ``accurate'' one (fitting loss as regularizer)
+% \item \visible<6->{\textbf{Dyna-style MBRL}: $\rth$ is learned; the real-world gradient complements MLE}
+% \item \visible<7->{vs.\ fine-tuning $\pnu$ on hardware: $\mth$ is small, physical and explainable}
+% \end{itemize}}
+% \end{frame}
+
 %-----------------------------------------------------------------------
-\begin{frame}{\normalsize Bi-level PPO and a quadrotor example}
-\footnotesize
-\begin{columns}[T]
-\column{0.54\textwidth}
-\vspace{-.45cm}
-\begin{algorithm}[H]
-\scriptsize
-\caption{\scriptsize Bi-level PPO (costs, minimization)}
-\For{real-world iteration $j=1,2,\dots$}{
- \lFor{$N_{\rm in}$ steps}{PPO update of $\pnu$ in $\rth,\Lth$ (warm start)}
- Roll out $\pin$ in sim: estimate $A$, $B$\;
- Roll out $\pin$ on the real system: $\hat g=\nabla_{\pnu}J$\;
- Solve $(A^\top+\varepsilon I)\,\lambda=\hat g$\;
- $\mth\leftarrow\mth+\alpha\,B^\top\lambda$ \tcp*{$=\mth-\alpha\kap^\top\hat g$}
-}
-\end{algorithm}
-\column{0.44\textwidth}
-\begin{overlayarea}{\textwidth}{0.4\textheight}
-\only<1-4>{
-\textbf{2D quadrotor} (safe-control-gym): reach a goal from random initial states
-\begin{itemize}
-\item<2-> simulator intialized with wrong (mass, length)
-\item<3-> policy and critics: neural networks
-\end{itemize}}
-\only<4->{
-\begin{itemize}
-\item<5-> in-sim policy (red dotted) misses the goal: the sim-to-real gap
-\item<6-> bi-level PPO closes the gap
-\item<7-> \textbf{mass $\to\approx0.85\,m_0$}: wrong model, optimal policy
-\end{itemize}}
-\end{overlayarea}
-\end{columns}
-\vspace{-.2cm}
-\visible<5->{\includegraphics[width=\textwidth]{Figures/SimToReal/quadcopter.pdf}}
-\end{frame}
+% ===== A6: original bi-level PPO slide (merged into Example 1) =====
+% \begin{frame}{\normalsize Bi-level PPO and a quadrotor example}
+% \footnotesize
+% \begin{columns}[T]
+% \column{0.54\textwidth}
+% \vspace{-.45cm}
+% \begin{algorithm}[H]
+% \scriptsize
+% \caption{\scriptsize Bi-level PPO (costs, minimization)}
+% \For{real-world iteration $j=1,2,\dots$}{
+%  \lFor{$N_{\rm in}$ steps}{PPO update of $\pnu$ in $\rth,\Lth$ (warm start)}
+%  Roll out $\pin$ in sim: estimate $\nabla_{\pnu}\Fres$, $\nabla_{\mth}\Fres$ (as products)\;
+%  Roll out $\pin$ on the real system: $\hat g=\nabla_{\pnu}J$\;
+%  Solve $\big((\nabla_{\pnu}\Fres)^\top+\varepsilon I\big)\,\lambda=\hat g$\;
+%  $\mth\leftarrow\mth+\alpha\,(\nabla_{\mth}\Fres)^\top\lambda$ \tcp*{$=\mth-\alpha\kap^\top\hat g$}
+% }
+% \end{algorithm}
+% \column{0.44\textwidth}
+% \begin{overlayarea}{\textwidth}{0.4\textheight}
+% \only<1-4>{
+% \textbf{2D quadrotor} (safe-control-gym): reach a goal from random initial states
+% \begin{itemize}
+% \item<2-> simulator intialized with wrong (mass, length)
+% \item<3-> policy and critics: neural networks
+% \end{itemize}}
+% \only<4->{
+% \begin{itemize}
+% \item<5-> in-sim policy (red dotted) misses the goal: the sim-to-real gap
+% \item<6-> bi-level PPO closes the gap
+% \item<7-> \textbf{mass $\to\approx0.85\,m_0$}: wrong model, optimal policy
+% \end{itemize}}
+% \end{overlayarea}
+% \end{columns}
+% \vspace{-.2cm}
+% \visible<5->{\includegraphics[width=\textwidth]{Figures/SimToReal/quadcopter.pdf}}
+% \end{frame}
 
 %-----------------------------------------------------------------------
 \begin{frame}{\normalsize Example 2: Co-design of a system and its policy}
 \footnotesize
 \begin{columns}[T]
 \column{0.5\textwidth}
-{\scriptsize \textbf{Recall} (slide 27): $\mth$ is the design; each design needs its own trained policy.}\\[3pt]
+{\scriptsize Each design $\mth$ needs its own trained policy}\\[2pt]
 \textbf{Bi-level problem}
+\vspace{-.15cm}
 \begin{align*}
 \min_{\mth}&\quad J^{D}\big(\nst(\mth),\mth\big)+C(\mth)\\
 \text{s.t.}&\quad \nst(\mth)\in\argmin_{\pnu}J^{\pi}(\pnu,\mth)
 \end{align*}
+\vspace{-.45cm}
 \begin{itemize}
-\item<2-> $J^\pi$: \textbf{operational} cost, trains the policy in-sim (the role of $\Jh$)
-\item<3-> $J^D$ \textbf{judges} the design (the role of $J^{\mathrm{out}}$), $C(\mth)$: cost to build it
-\item<4-> Usual practice: Bayesian optimization (BO) or evolution strategies (ES) around full RL runs; scales poorly with $\dim\mth$
-\item<5-> Here: differentiable simulator, so \PD\ everywhere
+\setlength{\itemsep}{1pt}
+\item<2-> $J^\pi$ trains the policy; $J^D$ \textbf{judges} the design; $C(\mth)$: cost to build it
+\item<3-> usual practice: BO or ES around full RL runs, scales poorly with $\dim\mth$
 \end{itemize}
 \column{0.48\textwidth}
-\visible<6->{
+\visible<4->{
 \textbf{Example: inventory--routing network}\\
-{\scriptsize instead of a drone: $\mth$ = capacities, not arm lengths}
+{\scriptsize $\mth$ = capacities, $\dim\mth$ from $15$ to $150$}
 \begin{center}
-\begin{tikzpicture}[>=stealth', line width=0.5pt, scale=0.85,
+\begin{tikzpicture}[>=stealth', line width=0.5pt, scale=0.78,
   every node/.style={font=\tiny, inner sep=1.5pt}]
 \node[draw, rounded corners=2pt, fill=black!5, minimum width=1.3cm, minimum height=0.65cm, font=\scriptsize] (nd) at (0,0) {stock $q_i$};
 \node[anchor=south, font=\scriptsize] at (nd.north) {node $i$};
@@ -2787,73 +3017,132 @@ So only co-design has a \textbf{direct} term $\partial_{\mth}J^D$ (policy fixed,
 \node at (0,-0.95) {route $\textcolor{myRed2}{c_e}\tanh(\textcolor{myBlue3}{a^{\rm rt}_e})$};
 \end{tikzpicture}
 \end{center}
-\scriptsize
-\begin{itemize}
-\item state: stock $q_i$, backlog $y_i$, AR(1) demand $d_i$
-\item<7-> $\mth$: \textcolor{myRed2}{supply, service, routing capacities}, $\dim\mth$ from $15$ to $150$
-\item<8-> the design bounds the \textcolor{myBlue3}{actions}; softplus-smoothed $\min,\max$
-\item<9-> $J^D=J^\pi+\lambda_y\cdot$\textcolor{myOrangeD}{backlog}, \ $C(\mth)$ quadratic
-\end{itemize}}
-\end{columns}
-\end{frame}
-
-%-----------------------------------------------------------------------
-\begin{frame}{\normalsize Co-design gradient with pathwise (SVG) in-sim training}
-\footnotesize
-\begin{columns}[T]
-\column{0.58\textwidth}
-\begin{align*}
-\nabla_{\mth}\big(J^D+C\big)=\underbrace{\textcolor{myOrangeD}{\partial_{\mth}J^D}}_{\text{direct}}+\underbrace{\textcolor{myBlue3}{\nabla_{\pnu}J^D\,\kap}}_{\text{indirect}}+\nabla_{\mth}C
-\end{align*}
-\visible<3->{\textbf{Along a sampled path}, $\kap$ enters through the actions:}
-\begin{align*}
-\visible<3->{A_k}&\visible<3->{=\nabla_{\sv}g_{\pnu}\,S_k+\nabla_{\pnu}g_{\pnu}\,\kap}\\
-\visible<3->{S_{k+1}}&\visible<3->{=\partial_{\mth}f_{\mth}+\nabla_{\sv}f_{\mth}\,S_k+\nabla_{\av}f_{\mth}\,A_k}
-\end{align*}
-
 \vspace{-.2cm}
-\visible<4->{
-\textbf{Envelope}: indirect term $=0$ if $J^D=J^\pi$; the backlog penalty ($\lambda_y>0$) makes $J^D\neq J^\pi$.}
-\column{0.4\textwidth}
-\visible<2->{
-\begin{center}
-\begin{tikzpicture}[>=stealth', yscale=0.7, scale=0.66]
-\begin{scope}[shift={(3.9,3.05)}, rotate=25]
-  \foreach \r/\shade in {2.0109/5, 1.51/10, 1.005/16, 0.50/23}
-    \filldraw[fill=gray!\shade, draw=gray!45, line width=0.4pt] (0,0) ellipse ({\r} and {0.72*\r});
-  \fill[gray!70] (0,0) circle (1.4pt);
-\end{scope}
-\node[gray!65!black, font=\tiny, anchor=west] at (4.5,1.2) {$J^{D}$ level sets};
-\draw[->] (0,0)--(6.0,0) node[right, font=\scriptsize] {$\mth$};
-\draw[->] (0,0)--(0,4.75) node[above, font=\scriptsize] {$\pnu$};
-\draw[gray!60, densely dotted] (2.4,0)--(2.4,1.8)--(0,1.8);
-\node[font=\tiny, below] at (2.4,0) {$\mth_0$};
-\draw[myBlue3, very thick] (0.2,0.75) .. controls (1.0,1.05) and (1.8,1.35) .. (2.4,1.8) .. controls (3.0,2.25) and (3.5,3.0) .. (3.85,4.2);
-\node[text=myBlue3, font=\scriptsize, anchor=south] at (3.85,4.22) {$\nst(\mth)$};
-\draw[gray!55, dashed, line width=0.4pt] (3.5,1.8)--(3.5,2.625)--(2.4,2.625);
-\draw[->, myOrangeD, thick] (2.4,1.8) -- (3.5,1.8);
-\draw[->, myBlue3, thick] (2.4,1.8) -- (2.4,2.625);
-\draw[->, densely dashed, thick] (2.4,1.8) -- (3.5,2.625);
-\fill (2.4,1.8) circle (2pt);
-\node[text=myOrangeD, font=\tiny, anchor=north] at (2.95,1.74) {direct};
-\node[text=myBlue3, font=\tiny, anchor=east] at (2.34,2.25) {indirect};
-\end{tikzpicture}
-\end{center}
-{\scriptsize A design step $=$ a move at fixed policy $+$ the induced policy shift along $\nst(\mth)$}}
+{\scriptsize the design bounds the \textcolor{myBlue3}{actions}; \ $J^D=J^\pi+\lambda_y\cdot$\textcolor{myOrangeD}{backlog}}}
 \end{columns}
+\vspace{-.1cm}
 \visible<5->{
 \begin{algorithm}[H]
 \scriptsize
-\caption{\scriptsize Gradient-based co-design (costs, minimization)}
+\caption{\scriptsize Gradient-based co-design (differentiable simulator: \PD\ everywhere)}
 \For{$k=0,1,2,\dots$}{
- A few warm-started SVG steps on $J^\pi(\cdot,\mth_k)$: they only have to \textbf{track} $\nst(\mth_k)$\;
- $g_{\rm dir}\leftarrow\partial_{\mth}J^D$, \ one \texttt{jax.grad} with $\pnu$ fixed\;
- \lIf{$J^D\neq J^\pi$}{$u\leftarrow\nabla_{\pnu}J^D$, \ $g_{\rm ind}\leftarrow-B^\top(A+\varepsilon I)^{-1}u$; \ \textbf{else} $g_{\rm ind}\leftarrow0$}
- $\mth_{k+1}\leftarrow\Pi_\Theta\big(\mth_k-\alpha\,(g_{\rm dir}+g_{\rm ind}+\nabla_{\mth}C)\big)$\;
+ a few warm-started SVG steps on $J^\pi(\cdot,\mth_k)$: they only have to \textbf{track} $\nst(\mth_k)$\;
+ $g\leftarrow\partial_{\mth}J^D+\nabla_{\pnu}J^D\,\kap+\nabla_{\mth}C$ \quad (\texttt{jax.grad} and the adjoint trick, slide 27)\;
+ $\mth_{k+1}\leftarrow\Pi_\Theta(\mth_k-\alpha\,g)$ \tcp*{projection onto the bounds}
 }
 \end{algorithm}}
 \visible<6->{{\scriptsize \textbf{Converges} to an approximately stationary design for small $\alpha$: \ error $\mathcal O\big(\tfrac1{\alpha N}\big)+\mathcal O(\alpha\sigma^2)+$ bias}}
 \end{frame}
+
+% ===== A7: original Example 2 slide (merged above) =====
+% \begin{frame}{\normalsize Example 2: Co-design of a system and its policy}
+% \footnotesize
+% \begin{columns}[T]
+% \column{0.5\textwidth}
+% {\scriptsize \textbf{Recall} (slide 29): $\mth$ is the design; each design needs its own trained policy.}\\[3pt]
+% \textbf{Bi-level problem}
+% \begin{align*}
+% \min_{\mth}&\quad J^{D}\big(\nst(\mth),\mth\big)+C(\mth)\\
+% \text{s.t.}&\quad \nst(\mth)\in\argmin_{\pnu}J^{\pi}(\pnu,\mth)
+% \end{align*}
+% \begin{itemize}
+% \item<2-> $J^\pi$: \textbf{operational} cost, trains the policy in-sim (the role of $\Jh$)
+% \item<3-> $J^D$ \textbf{judges} the design (the role of $J^{\mathrm{out}}$), $C(\mth)$: cost to build it
+% \item<4-> Usual practice: Bayesian optimization (BO) or evolution strategies (ES) around full RL runs; scales poorly with $\dim\mth$
+% \item<5-> Here: differentiable simulator, so \PD\ everywhere
+% \end{itemize}
+% \column{0.48\textwidth}
+% \visible<6->{
+% \textbf{Example: inventory--routing network}\\
+% {\scriptsize instead of a drone: $\mth$ = capacities, not arm lengths}
+% \begin{center}
+% \begin{tikzpicture}[>=stealth', line width=0.5pt, scale=0.85,
+%   every node/.style={font=\tiny, inner sep=1.5pt}]
+% \node[draw, rounded corners=2pt, fill=black!5, minimum width=1.3cm, minimum height=0.65cm, font=\scriptsize] (nd) at (0,0) {stock $q_i$};
+% \node[anchor=south, font=\scriptsize] at (nd.north) {node $i$};
+% \draw[->, thick, myRed2] (-3.0,0) -- (nd.west);
+% \node[anchor=south] at (-1.85,0.05) {supply $\textcolor{myRed2}{s_i}\sigma(\textcolor{myBlue3}{a^{\rm sup}_i})$};
+% \draw[->, thick] (nd.east) -- (2.7,0);
+% \node[anchor=north] at (1.75,-0.1) {serve $\textcolor{myRed2}{b_i}\sigma(\textcolor{myBlue3}{a^{\rm srv}_i})$};
+% \node[draw=myOrangeD, rounded corners=2pt, fill=myOrangeD!8, font=\scriptsize] (bl) at (1.5,1.0) {backlog $y_i$};
+% \draw[->] (1.5,1.7) -- (bl.north);
+% \node[anchor=east] at (1.3,1.6) {demand $d_i$};
+% \draw[->, myOrangeD] (bl.south) -- (1.5,0.05);
+% \node[draw, rounded corners=2pt, minimum height=0.4cm, font=\scriptsize] (jm) at (-1.8,-1.25) {$q_{i-1}$};
+% \node[draw, rounded corners=2pt, minimum height=0.4cm, font=\scriptsize] (jp) at (1.8,-1.25) {$q_{i+1}$};
+% \draw[<->, thick, myRed2] (jm.north) -- (nd.south west);
+% \draw[<->, thick, myRed2] (jp.north) -- (nd.south east);
+% \node at (0,-0.95) {route $\textcolor{myRed2}{c_e}\tanh(\textcolor{myBlue3}{a^{\rm rt}_e})$};
+% \end{tikzpicture}
+% \end{center}
+% \scriptsize
+% \begin{itemize}
+% \item state: stock $q_i$, backlog $y_i$, AR(1) demand $d_i$
+% \item<7-> $\mth$: \textcolor{myRed2}{supply, service, routing capacities}, $\dim\mth$ from $15$ to $150$
+% \item<8-> the design bounds the \textcolor{myBlue3}{actions}; softplus-smoothed $\min,\max$
+% \item<9-> $J^D=J^\pi+\lambda_y\cdot$\textcolor{myOrangeD}{backlog}, \ $C(\mth)$ quadratic
+% \end{itemize}}
+% \end{columns}
+% \end{frame}
+
+%-----------------------------------------------------------------------
+% ===== A7: original co-design gradient slide (merged into Example 2) =====
+% \begin{frame}{\normalsize Co-design gradient with pathwise (SVG) in-sim training}
+% \footnotesize
+% \begin{columns}[T]
+% \column{0.58\textwidth}
+% \begin{align*}
+% \nabla_{\mth}\big(J^D+C\big)=\underbrace{\textcolor{myOrangeD}{\partial_{\mth}J^D}}_{\text{direct}}+\underbrace{\textcolor{myBlue3}{\nabla_{\pnu}J^D\,\kap}}_{\text{indirect}}+\nabla_{\mth}C
+% \end{align*}
+% \visible<3->{\textbf{Along a sampled path}, $\kap$ enters through the actions (what AD propagates):}
+% \begin{align*}
+% \visible<3->{\tfrac{\mathrm d\av_k}{\mathrm d\mth}}&\visible<3->{=\nabla_{\sv}g_{\pnu}\,\tfrac{\mathrm d\sv_k}{\mathrm d\mth}+\nabla_{\pnu}g_{\pnu}\,\kap}\\
+% \visible<3->{\tfrac{\mathrm d\sv_{k+1}}{\mathrm d\mth}}&\visible<3->{=\partial_{\mth}f_{\mth}+\nabla_{\sv}f_{\mth}\,\tfrac{\mathrm d\sv_k}{\mathrm d\mth}+\nabla_{\av}f_{\mth}\,\tfrac{\mathrm d\av_k}{\mathrm d\mth}}
+% \end{align*}
+%
+% \vspace{-.2cm}
+% \visible<4->{
+% \textbf{Envelope}: indirect term $=0$ if $J^D=J^\pi$; the backlog penalty ($\lambda_y>0$) makes $J^D\neq J^\pi$.}
+% \column{0.4\textwidth}
+% \visible<2->{
+% \begin{center}
+% \begin{tikzpicture}[>=stealth', yscale=0.7, scale=0.66]
+% \begin{scope}[shift={(3.9,3.05)}, rotate=25]
+%   \foreach \r/\shade in {2.0109/5, 1.51/10, 1.005/16, 0.50/23}
+%     \filldraw[fill=gray!\shade, draw=gray!45, line width=0.4pt] (0,0) ellipse ({\r} and {0.72*\r});
+%   \fill[gray!70] (0,0) circle (1.4pt);
+% \end{scope}
+% \node[gray!65!black, font=\tiny, anchor=west] at (4.5,1.2) {$J^{D}$ level sets};
+% \draw[->] (0,0)--(6.0,0) node[right, font=\scriptsize] {$\mth$};
+% \draw[->] (0,0)--(0,4.75) node[above, font=\scriptsize] {$\pnu$};
+% \draw[gray!60, densely dotted] (2.4,0)--(2.4,1.8)--(0,1.8);
+% \node[font=\tiny, below] at (2.4,0) {$\mth_0$};
+% \draw[myBlue3, very thick] (0.2,0.75) .. controls (1.0,1.05) and (1.8,1.35) .. (2.4,1.8) .. controls (3.0,2.25) and (3.5,3.0) .. (3.85,4.2);
+% \node[text=myBlue3, font=\scriptsize, anchor=south] at (3.85,4.22) {$\nst(\mth)$};
+% \draw[gray!55, dashed, line width=0.4pt] (3.5,1.8)--(3.5,2.625)--(2.4,2.625);
+% \draw[->, myOrangeD, thick] (2.4,1.8) -- (3.5,1.8);
+% \draw[->, myBlue3, thick] (2.4,1.8) -- (2.4,2.625);
+% \draw[->, densely dashed, thick] (2.4,1.8) -- (3.5,2.625);
+% \fill (2.4,1.8) circle (2pt);
+% \node[text=myOrangeD, font=\tiny, anchor=north] at (2.95,1.74) {direct};
+% \node[text=myBlue3, font=\tiny, anchor=east] at (2.34,2.25) {indirect};
+% \end{tikzpicture}
+% \end{center}
+% {\scriptsize A design step $=$ a move at fixed policy $+$ the induced policy shift along $\nst(\mth)$}}
+% \end{columns}
+% \visible<5->{
+% \begin{algorithm}[H]
+% \scriptsize
+% \caption{\scriptsize Gradient-based co-design (costs, minimization)}
+% \For{$k=0,1,2,\dots$}{
+%  A few warm-started SVG steps on $J^\pi(\cdot,\mth_k)$: they only have to \textbf{track} $\nst(\mth_k)$\;
+%  $g_{\rm dir}\leftarrow\partial_{\mth}J^D$, \ one \texttt{jax.grad} with $\pnu$ fixed\;
+%  \lIf{$J^D\neq J^\pi$}{$u\leftarrow\nabla_{\pnu}J^D$, \ $g_{\rm ind}\leftarrow-(\nabla_{\mth}\Fres)^\top(\nabla_{\pnu}\Fres+\varepsilon I)^{-1}u$; \ \textbf{else} $g_{\rm ind}\leftarrow0$}
+%  $\mth_{k+1}\leftarrow\Pi_\Theta\big(\mth_k-\alpha\,(g_{\rm dir}+g_{\rm ind}+\nabla_{\mth}C)\big)$\;
+% }
+% \end{algorithm}}
+% \visible<6->{{\scriptsize \textbf{Converges} to an approximately stationary design for small $\alpha$: \ error $\mathcal O\big(\tfrac1{\alpha N}\big)+\mathcal O(\alpha\sigma^2)+$ bias}}
+% \end{frame}
 
 %-----------------------------------------------------------------------
 \begin{frame}{\normalsize Co-design: inventory--routing network}
@@ -2935,8 +3224,8 @@ So only co-design has a \textbf{direct} term $\partial_{\mth}J^D$ (policy fixed,
 \item<1-> \textbf{Models for decisions}: a policy optimal for an approximate model $\rth$ is in general not optimal in reality, and standard model fitting does not fix this
 \item<2-> \textbf{MDP equivalence}: some (non-unique) models and costs give the real optimal policy even if $\rth$ is inaccurate $\Rightarrow$ tune $\mth$ for \textbf{closed-loop performance}
 \item<3-> \textbf{The obstacle}: this needs $\kap=\mathrm d\nst/\mathrm d\mth$, the sensitivity of the trained policy
-\item<4-> \LR\ \textbf{re-weights} paths, \PD\ \textbf{moves} them; on the Bellman tree $\pnu$ and $\mth$ sit on different edges; neither always has lower variance
-\item<5-> \textbf{RL policy training can be differentiated}: under smoothness, convergence and regularity assumptions, the trained policy is a stationary point and the IFT gives a meaningful gradient, $\kap=-A^{-1}B$, from the end point of training alone
+\item<4-> \LR\ \textbf{re-weights} paths (a surrogate loss, black-box simulator), \PD\ \textbf{moves} them (backpropagation through the simulator); both are a forward and a backward pass, neither always has lower variance
+\item<5-> \textbf{RL policy training can be differentiated}: under smoothness, convergence and regularity assumptions, the trained policy is a stationary point and the IFT gives a meaningful gradient, $\kap=-(\nabla_{\pnu}\Fres)^{-1}\nabla_{\mth}\Fres$, from the end point of training alone
 \item<6-> \textbf{Outer gradient} $=$ direct $+\,\nabla_{\pnu}J^{\mathrm{out}}\kap$: tune a simulator for reality (sim-to-real) or a system with its policy (co-design)
 \end{enumerate}
 \visible<7->{
@@ -2944,7 +3233,7 @@ So only co-design has a \textbf{direct} term $\partial_{\mth}J^D$ (policy fixed,
 \textbf{Proof of concept established} on sim-to-real and co-design: a viable pathway towards \textbf{decision-oriented learning of MDPs}.
 \end{alertblock}}
 \visible<8->{
-\textbf{Open questions}: scaling the critic sensitivities, conditioning of $A$ for deep networks, offline real-world updates, latent-space model learning under partial observability}
+\textbf{Open questions}: scaling the critic sensitivities, conditioning of $\nabla_{\pnu}\Fres$ for deep networks, offline real-world updates, latent-space model learning under partial observability}
 \end{frame}
 
 %-----------------------------------------------------------------------
@@ -2965,6 +3254,134 @@ So only co-design has a \textbf{direct} term $\partial_{\mth}J^D$ (policy fixed,
 \item \textit{Gradient-based co-design of RL policies with differentiable simulators}, TMLR 2026\\
 {\scriptsize Akhil S.~Anand, Xun Shen, Marc Peter Deisenroth, Sebastien Gros}
 \end{itemize}}
+\end{frame}
+
+%=======================================================================
+% Backup slides (not numbered)
+%=======================================================================
+\begin{frame}[noframenumbering]
+\begin{center}
+{\Large\textbf{Backup slides}}\\[6pt]
+{\small details of the policy sensitivities $\nabla_{\pnu}\Fres$, $\nabla_{\mth}\Fres$ and of the critic sensitivities}
+\end{center}
+\end{frame}
+
+%-----------------------------------------------------------------------
+\begin{frame}<6>[noframenumbering]{\normalsize Backup: computing $\nabla_{\pnu}\Fres$ and $\nabla_{\mth}\Fres$ for \LR\ policies (PPO, A2C)}
+\footnotesize
+\textbf{Recall} (slide 19): $\Fres=\nabla_{\pnu}\Jh=\E\big[\sum_k\gamma^k\nabla_{\pnu}\log\pi_k\,Q_k\big]$, \ with $\pi_k=\pin(\av_k|\sv_k)$, $Q_k=Q^{\pin}_{\mth}(\sv_k,\av_k)$ \ (PPO: $Q_k\to$ advantage)\\[3pt]
+\visible<2->{$(\pnu,\mth)$ act on $\Fres$ in \textbf{three} ways:
+\begin{enumerate}
+\setlength{\itemsep}{1pt}
+\item the policy term $\nabla_{\pnu}\log\pi_k$ itself \hfill \textbf{policy curvature}
+\item<3-> the cost-to-go $Q_k$ \hfill \textbf{critic sensitivity}
+\item<4-> which states and actions are sampled (re-weighting, slide 18) \hfill \textbf{sampling}
+\end{enumerate}}
+\visible<5->{
+\begin{block}{\footnotesize Differentiate once more \ (Anand et al., 2026, Theorem 1)}
+\vspace{-.25cm}
+\begin{align*}
+\nabla_{\pnu}\Fres&=\E\Big[\sum_k\gamma^k\Big(\underbrace{\nabla^2_{\pnu\pnu}\log\pi_k\,Q_k}_{\text{policy curvature}}+\underbrace{\nabla_{\pnu}\log\pi_k\,(\nabla_{\pnu}Q_k)^\top}_{\text{critic sensitivity}}+\underbrace{\nabla_{\pnu}\log\pi_k\,Q_k\,(W^{\pnu}_k)^\top}_{\text{sampling}}\Big)\Big]\\[1pt]
+\visible<6->{\nabla_{\mth}\Fres}&\visible<6->{=\E\Big[\sum_k\gamma^k\Big(\underbrace{\nabla_{\pnu}\log\pi_k\,(\nabla_{\mth}Q_k)^\top}_{\text{critic sensitivity}}+\underbrace{\nabla_{\pnu}\log\pi_k\,Q_k\,(W^{\mth}_k)^\top}_{\text{sampling}}\Big)\Big]}
+\end{align*}
+{\scriptsize history score: \ $W^{\pnu}_k=\sum_{i\le k}\nabla_{\pnu}\log\pi_i$, \quad $W^{\mth}_k=\sum_{i<k}\nabla_{\mth}\log\rth(\sv_{i+1}|\sv_i,\av_i)$}\\
+\visible<6->{{\scriptsize $\pi_k$ does not depend on $\mth$, so $\nabla_{\mth}\Fres$ has no curvature term; critic sensitivities $\nabla Q_k$: see the critic backup slides}}
+\end{block}}
+\vfill
+\parbox{0.8\textwidth}{\tiny A.\,S.~Anand et al., \textit{Bi-Level Reinforcement Learning Pathway for Sim-to-Real Optimality}, RLC 2026.}
+\end{frame}
+
+%-----------------------------------------------------------------------
+\begin{frame}<6>[noframenumbering]{\normalsize Backup: $\nabla_{\pnu}\Fres$ and $\nabla_{\mth}\Fres$ for \LR\ policies in code}
+\footnotesize
+\textbf{Goal}: the IFT only needs products $(\nabla_{\pnu}\Fres)^\top v$, $(\nabla_{\mth}\Fres)^\top w$ (slide 27), never the matrices\\[2pt]
+\begin{enumerate}
+\setlength{\itemsep}{2pt}
+\item<2-> \textbf{Forward}: the same rollouts as PPO; record $\log\pi_k$ and $\log\rth$ of every step as functions of $(\pnu,\mth)$; the critic gives $Q_k$; $\nabla_{\pnu}Q_k$, $\nabla_{\mth}Q_k$ from the critic backup slides
+\item<3-> \textbf{Pitfall}: \texttt{grad} of the usual PPO gradient gives \textbf{only} the policy curvature: samples and critic are constants in the AD graph, so it even returns $\nabla_{\mth}\Fres=0$
+\item<4-> \textbf{Trick}: with $\mathrm{stop}(x)$ the value of $x$ seen as a constant by AD (\texttt{detach}, \texttt{stop\_gradient}), $x-\mathrm{stop}(x)$ is $0$ in value but has derivative $1$ $\Rightarrow$ add the missing derivatives without changing any value
+\begin{itemize}
+\item[] \textbf{sampling}: multiply step $k$ by $\exp\!\big(\ell_k-\mathrm{stop}(\ell_k)\big)$, \ $\ell_k=\log p(\text{history up to }k)$: \ value $1$, derivative $W_k$
+\item[] \textbf{critic}: use $Q_k+(\nabla_{\pnu}Q_k)^\top\big(\pnu-\mathrm{stop}(\pnu)\big)+(\nabla_{\mth}Q_k)^\top\big(\mth-\mathrm{stop}(\mth)\big)$: \ value $Q_k$, derivative $\nabla Q_k$
+\end{itemize}
+\item<5-> \textbf{Backward}: with this $\Fres$, \ $(\nabla_{\pnu}\Fres)^\top v=\nabla_{\pnu}\langle\Fres,v\rangle$ \ and \ $(\nabla_{\mth}\Fres)^\top w=\nabla_{\mth}\langle\Fres,w\rangle$: one backward pass each
+\end{enumerate}
+\visible<6->{\textcolor{myRed2}{\textbf{Same samples and same value of $\Fres$, but AD now sees all three effects}}}
+\vfill
+\parbox{0.8\textwidth}{\tiny J.~Foerster et al., \textit{DiCE: The Infinitely Differentiable Monte Carlo Estimator}, ICML 2018 (the $\exp(\ell-\mathrm{stop}(\ell))$ trick).}
+\end{frame}
+
+%-----------------------------------------------------------------------
+\begin{frame}[noframenumbering]{\normalsize Backup: differentiating the critic, $\nabla_{\pnu}Q_k$ and $\nabla_{\mth}Q_k$}
+\footnotesize
+\textbf{Why not AD of the critic network?} The network $Q_w(\sv,\av)$ has no input $\pnu$ or $\mth$: AD gives only $\nabla_{\sv}Q$, $\nabla_{\av}Q$, $\nabla_wQ$. Its weights $w$ come out of training, so we differentiate what $Q$ \textbf{satisfies}, the Bellman equation:
+\vspace{-.15cm}
+\[Q_k=\Lth(\sv_k,\av_k)+\gamma\,\E\big[Q_{k+1}\big],\qquad \sv_{k+1}\sim\rth(\cdot|\sv_k,\av_k),\ \ \av_{k+1}\sim\pin(\cdot|\sv_{k+1})\]
+\vspace{-.4cm}
+
+\textbf{Differentiate it} like the \LR\ gradient: product rule, and a sampling distribution gives a score
+\vspace{-.15cm}
+\begin{align*}
+\nabla_{\mth}Q_k&=\E\Big[\underbrace{\nabla_{\mth}\Lth(\sv_k,\av_k)+\gamma\,\textcolor{myRed2}{\nabla_{\mth}\log\rth(\sv_{k+1}|\sv_k,\av_k)}\,Q_{k+1}}_{c^{\mth}_k}+\gamma\,\nabla_{\mth}Q_{k+1}\Big]\\
+\nabla_{\pnu}Q_k&=\E\Big[\underbrace{\gamma\,\textcolor{myBlue3}{\nabla_{\pnu}\log\pin(\av_{k+1}|\sv_{k+1})}\,Q_{k+1}}_{c^{\pnu}_k}+\gamma\,\nabla_{\pnu}Q_{k+1}\Big]
+\end{align*}
+{\scriptsize $\mth$: in the cost and in the next state (score of $\rth$); \quad $\pnu$: only in the next action (score of $\pin$)}
+\vspace{.1cm}
+\begin{alertblock}{}
+\centering $\nabla Q_k$ satisfies \textbf{its own Bellman equation}, with the \textbf{sensitivity cost} $c_k$ in place of $\Lth$:\\[2pt]
+$\nabla Q_k=c_k+\gamma\,\E\big[\nabla Q_{k+1}\big]=\E\big[\textstyle\sum_{t\ge k}\gamma^{t-k}c_t\big]$
+\end{alertblock}
+\vfill
+\parbox{0.95\textwidth}{\tiny A.\,S.~Anand et al., \textit{Bi-Level Reinforcement Learning Pathway for Sim-to-Real Optimality}, RLC 2026 (Lemma 2 and appendix).}
+\end{frame}
+
+%-----------------------------------------------------------------------
+\begin{frame}[noframenumbering]{\normalsize Backup: estimating the critic sensitivity $\nabla Q_k$ in practice}
+\footnotesize
+$\nabla Q_k$ is the cost-to-go of the sensitivity cost $c_k$, so it is \textbf{estimated like a critic}, on the same in-sim rollouts ($Q_{k+1}$ inside $c_k$ comes from the usual critic):
+\begin{itemize}
+\setlength{\itemsep}{3pt}
+\item \textbf{Monte Carlo}: along each sampled trajectory, backwards like the return:
+\[G_N=0,\qquad G_k=c_k+\gamma\,G_{k+1},\qquad \nabla Q_k\approx G_k\]
+\vspace{-.5cm}
+\item \textbf{TD}: train a network $G(\sv,\av)\approx\nabla Q$ (one output per parameter) on the target $c_k+\gamma\,G(\sv_{k+1},\av_{k+1})$, next to the usual critic; fine for a few $\mth$, costly for a large $\pnu$
+\item \textbf{Variance}: $c_k$ contains scores $\Rightarrow$ subtract baselines, as A2C/PPO do for $Q$
+\item \textbf{Timescales}: the critic and $\nabla Q$ are learned fastest, then the policy, then $\mth$ (convergence of the bi-level scheme)
+\end{itemize}
+\vspace{.1cm}
+\begin{block}{\footnotesize \PD\ (SVG, SHAC) with a terminal critic $\gamma^HV(\sv_H)$}
+AD differentiates $V$ \textbf{through the state} $\sv_H$ (as part of the rollout). The critic's own dependence on $\mth$ is usually dropped: the critic is frozen, which gives a \textbf{semi-gradient} whose error is scaled by $\gamma^H$
+\end{block}
+\vfill
+\parbox{0.95\textwidth}{\tiny A.\,S.~Anand et al., \textit{Bi-Level Reinforcement Learning Pathway for Sim-to-Real Optimality}, RLC 2026; \textit{Gradient-Based Co-Design of RL Policies with Differentiable Simulators}, TMLR 2026 (\PD).}
+\end{frame}
+
+%-----------------------------------------------------------------------
+\begin{frame}<8>[noframenumbering]{\normalsize Backup: computing $\nabla_{\pnu}\Fres$ and $\nabla_{\mth}\Fres$ for \PD\ policies (SVG)}
+\footnotesize
+\textbf{Recall} (slide 20): with the noise $\omega$ fixed, $\Fres$ is itself the output of a backward pass through the rollout cost: \ $\Fres(\pnu,\mth)=\E_\omega\big[\nabla_{\pnu}J_\omega(\pnu,\mth)\big]$\\[2pt]
+\visible<2->{
+\begin{block}{\footnotesize In code: differentiate the backward pass once more (\texttt{grad} of \texttt{grad})}
+\scriptsize
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}l@{\ \ }l@{}}
+\textbf{gradient} & $\Fres(\pnu,\mth)$ = average over noise draws $\omega_i$ of $\mathtt{grad}_{\pnu}\,J_{\omega_i}(\pnu,\mth)$\\
+\visible<3->{\textbf{in} $\pnu$} & \visible<3->{$(\nabla_{\pnu}\Fres)^\top v=\nabla_{\pnu}\langle\Fres(\pnu,\mth),v\rangle$ \quad (a Hessian--vector product)}\\
+\visible<4->{\textbf{in} $\mth$} & \visible<4->{$(\nabla_{\mth}\Fres)^\top w=\nabla_{\mth}\langle\Fres(\pnu,\mth),w\rangle$}
+\end{tabular}\\[2pt]
+\visible<4->{one more backward pass each; no pitfall, as the noise does not depend on $(\pnu,\mth)$}
+\end{block}}
+\vspace{-.05cm}
+\visible<5->{\textbf{What AD computes for you} \ (Anand et al., 2026): per step, $\Fres$ adds (slope of the cost) $\times$ (how the path moves with $\pnu$) $=\nabla_z\Lth(z_k)\frac{\mathrm dz_k}{\mathrm d\pnu}$, \ $z_k=(\sv_k,\av_k)$. Product rule:}
+\vspace{-.2cm}
+\begin{align*}
+\visible<6->{\frac{\mathrm d}{\mathrm d\mth}\Big(\nabla_z\Lth(z_k)\,\frac{\mathrm dz_k}{\mathrm d\pnu}\Big)}&\visible<6->{=\underbrace{\Big(\frac{\mathrm d}{\mathrm d\mth}\nabla_z\Lth(z_k)\Big)}_{\mth\text{ in the cost, the path moves}}\frac{\mathrm dz_k}{\mathrm d\pnu}}\visible<7->{{}+\nabla_z\Lth(z_k)\,\underbrace{\frac{\mathrm d^2z_k}{\mathrm d\pnu\,\mathrm d\mth}}_{\mth\text{ bends the path's response}}}
+\end{align*}
+\vspace{-.1cm}
+\visible<7->{{\scriptsize second derivatives of $\Lth$, $f_{\mth}$, $g_{\pnu}$ along the path, all from AD; \ $\nabla_{\pnu}\Fres$: same with $\mth\to\pnu$}}\\[1pt]
+\visible<8->{{\scriptsize \textbf{In practice} $\nabla_{\pnu}\Fres$ may be ill-conditioned or indefinite: damp it ($+\varepsilon I$) or truncate its eigendecomposition}}
+\vfill
+\parbox{0.8\textwidth}{\tiny A.\,S.~Anand et al., \textit{Gradient-Based Co-Design of Reinforcement Learning Policies with Differentiable Simulators}, TMLR 2026}
 \end{frame}
 
 \end{document}
